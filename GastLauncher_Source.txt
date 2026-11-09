@@ -1,0 +1,1902 @@
+======================== FILE: work\GastLauncher\App.xaml ========================
+<Application x:Class="GastLauncher.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:GastLauncher"
+             Startup="Application_Startup">
+    <Application.Resources>
+         
+    </Application.Resources>
+</Application>
+
+
+======================== FILE: work\GastLauncher\App.xaml.cs ========================
+using System.IO;
+using System.Windows;
+using System.Windows.Threading;
+
+namespace GastLauncher;
+
+public partial class App : Application
+{
+    private static string LogPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GastLauncher", "startup.log");
+
+    private void Application_Startup(object sender, StartupEventArgs e)
+    {
+        DispatcherUnhandledException += (_, args) =>
+        {
+            WriteError(args.Exception);
+            MessageBox.Show("Gast Launcher не смог запуститься. Подробности сохранены в:\n" + LogPath,
+                "Ошибка запуска", MessageBoxButton.OK, MessageBoxImage.Error);
+            args.Handled = true;
+            Shutdown(1);
+        };
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
+            if (args.ExceptionObject is Exception ex) WriteError(ex);
+        };
+
+        try
+        {
+            var window = new MainWindow();
+            MainWindow = window;
+            window.Show();
+        }
+        catch (Exception ex)
+        {
+            WriteError(ex);
+            MessageBox.Show("Gast Launcher не смог запуститься. Подробности сохранены в:\n" + LogPath,
+                "Ошибка запуска", MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown(1);
+        }
+    }
+
+    private static void WriteError(Exception ex)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(LogPath)!);
+            File.AppendAllText(LogPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {ex}\n\n");
+        }
+        catch { }
+    }
+}
+
+
+======================== FILE: work\GastLauncher\AssemblyInfo.cs ========================
+using System.Windows;
+
+[assembly:ThemeInfo(
+    ResourceDictionaryLocation.None,            //where theme specific resource dictionaries are located
+                                                //(used if a resource is not found in the page,
+                                                // or application resource dictionaries)
+    ResourceDictionaryLocation.SourceAssembly   //where the generic resource dictionary is located
+                                                //(used if a resource is not found in the page,
+                                                // app, or any theme specific resource dictionaries)
+)]
+
+
+======================== FILE: work\GastLauncher\GastLauncher.csproj ========================
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Assets\gast-launcher.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\gast-launcher.ico" />
+    <Resource Include="Assets\gast-launcher.ico" />
+    <PackageReference Include="CmlLib.Core" Version="4.1.0" />
+    <PackageReference Include="CmlLib.Core.Auth.Microsoft" Version="3.4.0" />
+    <PackageReference Include="CmlLib.Core.Installer.Forge" Version="2.0.0" />
+  </ItemGroup>
+
+</Project>
+
+
+======================== FILE: work\GastLauncher\MainWindow.xaml ========================
+<Window x:Class="GastLauncher.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Gast Launcher" Icon="Assets/gast-launcher.ico" Height="760" Width="1240" MinHeight="680" MinWidth="1050"
+        WindowStartupLocation="CenterScreen" Background="#0B0E13" Foreground="#F5F7FA"
+        FontFamily="Segoe UI" WindowStyle="None" AllowsTransparency="True" ResizeMode="CanResizeWithGrip">
+    <Window.Resources>
+        <SolidColorBrush x:Key="Panel" Color="#121820"/>
+        <SolidColorBrush x:Key="SoftPanel" Color="#171F29"/>
+        <SolidColorBrush x:Key="Muted" Color="#8793A3"/>
+        <SolidColorBrush x:Key="Mint" Color="#A8F07A"/>
+        <Style x:Key="SideButton" TargetType="Button">
+            <Setter Property="Foreground" Value="#A5AFBC"/><Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/><Setter Property="FontSize" Value="14"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/><Setter Property="Padding" Value="16,13"/>
+            <Setter Property="Cursor" Value="Hand"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+                <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="12" Padding="{TemplateBinding Padding}">
+                    <ContentPresenter VerticalAlignment="Center"/>
+                </Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="Background" Value="#1D2731"/><Setter Property="Foreground" Value="#F4F8F3"/></Trigger></ControlTemplate.Triggers>
+            </ControlTemplate></Setter.Value></Setter>
+        </Style>
+        <Style x:Key="RoundButton" TargetType="Button">
+            <Setter Property="Foreground" Value="#10150D"/><Setter Property="Background" Value="#A8F07A"/><Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="15"/><Setter Property="FontWeight" Value="Bold"/><Setter Property="Padding" Value="28,16"/><Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="15" Padding="{TemplateBinding Padding}"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="Background" Value="#C2FF99"/><Setter TargetName="b" Property="RenderTransform"><Setter.Value><ScaleTransform ScaleX="1.025" ScaleY="1.025"/></Setter.Value></Setter></Trigger><Trigger Property="IsEnabled" Value="False"><Setter TargetName="b" Property="Opacity" Value="0.45"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
+        </Style>
+        <Style x:Key="DarkButton" TargetType="Button" BasedOn="{StaticResource RoundButton}"><Setter Property="Foreground" Value="#E4E9ED"/><Setter Property="Background" Value="#212B35"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Padding" Value="18,12"/></Style>
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="#C3CCD5"/>
+            <Setter Property="Background" Value="#171F29"/>
+            <Setter Property="Padding" Value="12,9"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBoxItem">
+                <Border x:Name="ItemBorder" Background="{TemplateBinding Background}" BorderBrush="Transparent" BorderThickness="1" Padding="{TemplateBinding Padding}" CornerRadius="6" Margin="3,1">
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="18"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBlock x:Name="SelectedCheck" Text="✓" Foreground="#BDF796" FontWeight="Bold" Opacity="0" VerticalAlignment="Center"/><ContentPresenter Grid.Column="1" VerticalAlignment="Center"/></Grid>
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="ItemBorder" Property="Background" Value="#202B34"/><Setter Property="Foreground" Value="#F1F5F7"/></Trigger>
+                    <Trigger Property="IsSelected" Value="True"><Setter TargetName="ItemBorder" Property="Background" Value="#87947D"/><Setter TargetName="ItemBorder" Property="BorderBrush" Value="#647158"/><Setter TargetName="SelectedCheck" Property="Opacity" Value="1"/><Setter TargetName="SelectedCheck" Property="Foreground" Value="#11170F"/><Setter Property="Foreground" Value="#11170F"/><Setter Property="FontWeight" Value="Bold"/></Trigger>
+                    <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.5"/></Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate></Setter.Value></Setter>
+        </Style>
+    </Window.Resources>
+    <Border BorderBrush="#242C35" BorderThickness="1" CornerRadius="18" Background="#0B0E13">
+        <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="228"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <Border Grid.Column="0" Background="#0F141A" CornerRadius="18,0,0,18">
+                <DockPanel Margin="18,24">
+                    <StackPanel DockPanel.Dock="Top">
+                            <StackPanel Orientation="Horizontal" Margin="5,4,0,36">
+                            <Border Width="37" Height="37" CornerRadius="12" Background="#A8F07A"><TextBlock Text="G" Foreground="#10150D" FontWeight="Black" FontSize="23" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                            <StackPanel Margin="11,1,0,0"><TextBlock Text="GAST" FontSize="17" FontWeight="Black"/><TextBlock Text="LAUNCHER" FontSize="9" Foreground="#819080" FontWeight="Bold" Margin="1,-2,0,0"/></StackPanel>
+                        </StackPanel>
+                        <TextBlock Text="МЕНЮ" Foreground="#576371" FontSize="10" FontWeight="Bold" Margin="13,0,0,10"/>
+                        <Button Style="{StaticResource SideButton}" Content="▣   Играть" Foreground="#B8F68D" Background="#1D2922" Margin="0,0,0,4" Click="Versions_Click"/>
+                        <Button Style="{StaticResource SideButton}" Content="✦   Моды" Click="Mods_Click" Margin="0,0,0,4"/>
+                        <Button Style="{StaticResource SideButton}" Content="◷   Версии" Click="Versions_Click" Margin="0,0,0,4"/>
+                        <Button Style="{StaticResource SideButton}" Content="⚙   Настройки" Click="Settings_Click"/>
+                    </StackPanel>
+                    <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,8">
+                        <Border Background="#151D25" CornerRadius="14" Padding="14" Margin="0,0,0,16">
+                            <StackPanel><TextBlock Text="ЧИСТЫЙ MINECRAFT" Foreground="#A8F07A" FontSize="9" FontWeight="Bold"/><TextBlock Text="Оригинальные файлы игры" FontSize="11" Foreground="#A7B0BA" Margin="0,7,0,0" TextWrapping="Wrap"/></StackPanel>
+                        </Border>
+                        <Button x:Name="AccountButton" Style="{StaticResource DarkButton}" Content="Войти в Microsoft" Click="Login_Click" HorizontalContentAlignment="Center"/>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions><RowDefinition Height="62"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <Grid Grid.Row="0" Background="#0B0E13" MouseLeftButtonDown="Header_MouseLeftButtonDown">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,22,0">
+                        <TextBlock x:Name="AccountLabel" Text="Аккаунт не подключён" Foreground="#7C8793" FontSize="12" VerticalAlignment="Center" Margin="0,0,18,0"/>
+                        <Button Content="—" Width="34" Height="30" Background="Transparent" Foreground="#8793A3" BorderThickness="0" Click="Minimize_Click" FontSize="18"/>
+                        <Button Content="×" Width="34" Height="30" Background="Transparent" Foreground="#8793A3" BorderThickness="0" Click="Close_Click" FontSize="18"/>
+                    </StackPanel>
+                </Grid>
+                <ScrollViewer x:Name="PlayView" Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="34,12,36,30">
+                        <Border CornerRadius="22" Height="260" ClipToBounds="True">
+                            <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#273D37" Offset="0"/><GradientStop Color="#192B2A" Offset="0.48"/><GradientStop Color="#1A202A" Offset="1"/></LinearGradientBrush></Border.Background>
+                            <Grid>
+                                <Grid.Triggers><EventTrigger RoutedEvent="Loaded"><BeginStoryboard><Storyboard RepeatBehavior="Forever"><DoubleAnimation Storyboard.TargetName="heroGlow" Storyboard.TargetProperty="Opacity" From="0.28" To="0.72" Duration="0:0:3" AutoReverse="True"/></Storyboard></BeginStoryboard></EventTrigger></Grid.Triggers>
+                                <Ellipse x:Name="heroGlow" Width="310" Height="310" Fill="#253F38" Opacity="0.55" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,-8,0"/>
+                                <Ellipse Width="205" Height="205" Fill="#304C40" Opacity="0.55" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,45,0"/>
+                                <TextBlock Text="✦" FontSize="28" Foreground="#C6F3A3" Opacity="0.75" Margin="0,50,310,0" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+                                <StackPanel VerticalAlignment="Center" Margin="34,0,0,0">
+                                    <Border Background="#A8F07A" CornerRadius="8" Padding="10,5" HorizontalAlignment="Left"><TextBlock Text="ВАШ МИР ЖДЁТ" Foreground="#172014" FontSize="9" FontWeight="Bold"/></Border>
+                                    <TextBlock Text="Время играть." FontSize="38" FontWeight="Bold" Margin="0,15,0,1"/>
+                                    <TextBlock Text="Выбери эпоху Minecraft и отправляйся в путь." FontSize="14" Foreground="#B5C0BE"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <Grid Margin="2,25,2,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="220"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center"><TextBlock Text="Твоя версия" FontSize="22" FontWeight="Bold"/><TextBlock Text="Релизы, снапшоты и классические сборки" Foreground="#84909D" FontSize="12" Margin="0,5,0,0"/></StackPanel>
+                        <StackPanel Grid.Column="1" Margin="10,0,12,0"><TextBlock Text="ИЗДАНИЕ" Foreground="#7B8793" FontSize="9" FontWeight="Bold" Margin="2,0,0,4"/><ComboBox x:Name="EditionBox" Height="40" Background="#87947D" Foreground="#11170F" BorderBrush="#647158" Padding="10" FontWeight="Bold"><ComboBoxItem Content="Java Edition" IsSelected="True"/><ComboBoxItem Content="Rust Edition · Horizon"/></ComboBox></StackPanel>
+                            <Button x:Name="RefreshButton" Grid.Column="2" Content="↻  Обновить" Style="{StaticResource DarkButton}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Click="Refresh_Click"/>
+                        </Grid>
+                        <Grid x:Name="VersionFilterPanel" Margin="0,17,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="190"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" CornerRadius="14" Background="#151B22" Padding="14,3" Margin="0,0,12,0"><DockPanel><TextBlock Text="⌕" FontSize="20" Foreground="#8793A3" VerticalAlignment="Center" Margin="0,0,10,0"/><TextBox x:Name="SearchBox" Background="Transparent" Foreground="#EDF1F4" BorderThickness="0" FontSize="13" VerticalContentAlignment="Center" CaretBrush="#A8F07A" TextChanged="SearchBox_TextChanged"/></DockPanel></Border>
+                            <ComboBox x:Name="FilterBox" Grid.Column="1" Height="46" Background="#87947D" Foreground="#11170F" BorderBrush="#647158" Padding="12" FontWeight="Bold" SelectionChanged="FilterBox_SelectionChanged">
+                                <ComboBoxItem Content="Все версии" IsSelected="True"/><ComboBoxItem Content="Релизы"/><ComboBoxItem Content="Снапшоты"/><ComboBoxItem Content="Бета"/><ComboBoxItem Content="Альфа"/>
+                            </ComboBox>
+                        </Grid>
+                        <Border Background="#121820" CornerRadius="17" Padding="18" Margin="0,15,0,0">
+                            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="175"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <Grid Margin="0,0,16,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="ТЕКУЩАЯ ВЕРСИЯ" Foreground="#B8C3CE" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/><Border Grid.Column="1" Background="#87947D" BorderBrush="#647158" BorderThickness="1.5" CornerRadius="8" Padding="12,6"><TextBlock x:Name="SelectedVersionBadge" Text="Выбери версию" Foreground="#11170F" FontSize="15" FontWeight="Black"/></Border></Grid>
+                                    <ComboBox x:Name="VersionBox" Height="43" Margin="0,9,16,0" Background="#87947D" Foreground="#11170F" BorderBrush="#647158" BorderThickness="1.5" FontSize="14" FontWeight="Bold" Padding="11" SelectionChanged="VersionBox_SelectionChanged"/>
+                                    <Border x:Name="RustEditionPanel" Visibility="Collapsed" Background="#19231E" BorderBrush="#405B37" BorderThickness="1" CornerRadius="11" Padding="13" Margin="0,9,16,0"><StackPanel><TextBlock Text="HORIZON · MINECRAFT 26.3" Foreground="#C9F6AC" FontSize="12" FontWeight="Bold"/><TextBlock Text="Версия Java Edition, переписанная на Rust. Требует Java 26.3 и отдельный вход в Horizon." Foreground="#B0BDB5" FontSize="10" TextWrapping="Wrap" Margin="0,4,0,0"/></StackPanel></Border>
+                                    <TextBlock x:Name="VersionMeta" Text="Загружаю каталог версий…" Foreground="#8995A1" FontSize="11" Margin="2,9,0,0"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center"><Button x:Name="PlayButton" Style="{StaticResource RoundButton}" Content="▶   ИГРАТЬ" Click="Play_Click"/><TextBlock x:Name="EditionHint" Text="Java Edition" Foreground="#7D8995" FontSize="10" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,10,0,0"/></StackPanel>
+                            </Grid>
+                        </Border>
+                        <Grid Margin="2,18,2,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock x:Name="StatusText" Text="Подключаюсь к официальному каталогу Mojang…" Foreground="#8995A1" FontSize="11" VerticalAlignment="Center"/><TextBlock x:Name="CountText" Grid.Column="1" Text="" Foreground="#65717D" FontSize="10" VerticalAlignment="Center"/></Grid>
+                        <ProgressBar x:Name="ProgressBar" Height="3" Margin="0,12,0,0" Background="#1D252D" Foreground="#A8F07A" BorderThickness="0" Visibility="Collapsed" IsIndeterminate="True"/>
+                    </StackPanel>
+                </ScrollViewer>
+                <ScrollViewer x:Name="ModsView" Grid.Row="1" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                    <StackPanel Margin="34,20,36,30">
+                        <TextBlock Text="Сборки и контент" FontSize="27" FontWeight="Bold"/>
+                        <TextBlock Text="Создавай отдельные сборки и добавляй в каждую моды и текстур-паки из Modrinth или CurseForge." Foreground="#8995A1" FontSize="12" Margin="0,6,0,18"/>
+                        <Border Background="#121820" CornerRadius="16" Padding="18">
+                            <StackPanel>
+                                <TextBlock Text="СВОИ СБОРКИ" Foreground="#A8F07A" FontSize="9" FontWeight="Bold"/>
+                                <TextBlock Text="Каждая сборка хранит моды, текстур-паки и настройки отдельно." Foreground="#8995A1" FontSize="11" Margin="0,5,0,0"/>
+                                <Grid Margin="0,11,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="170"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <ComboBox x:Name="ModGameVersionBox" Height="44" Background="#87947D" Foreground="#11170F" BorderBrush="#647158" FontWeight="Bold" Padding="10" Margin="0,0,10,0"/>
+                                    <ComboBox x:Name="ModLoaderBox" Grid.Column="1" Height="44" Background="#87947D" Foreground="#11170F" BorderBrush="#647158" FontWeight="Bold" Padding="10" Margin="0,0,10,0">
+                                        <ComboBoxItem Content="Fabric" IsSelected="True"/><ComboBoxItem Content="Forge"/><ComboBoxItem Content="NeoForge"/><ComboBoxItem Content="Quilt"/>
+                                    </ComboBox>
+                                    <Button x:Name="ProfileButton" Grid.Column="2" Content="Создать сборку" Style="{StaticResource RoundButton}" Padding="17,12" Click="CreateProfile_Click"/>
+                                </Grid>
+                                <Grid Margin="0,9,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBox x:Name="BuildNameBox" Height="40" Background="#1B242D" Foreground="#EDF1F4" BorderBrush="#29343E" Padding="10" VerticalContentAlignment="Center" Text="Моя сборка"/>
+                                    <ComboBox x:Name="BuildBox" Grid.Column="1" Height="40" Margin="10,0,0,0" Background="#87947D" Foreground="#11170F" BorderBrush="#647158" BorderThickness="1.5" FontSize="13" FontWeight="Bold" Padding="10" DisplayMemberPath="Label" SelectionChanged="BuildBox_SelectionChanged"/>
+                                </Grid>
+                                <Border Background="#87947D" BorderBrush="#647158" BorderThickness="1" CornerRadius="9" Padding="11,8" Margin="0,9,0,0"><TextBlock x:Name="ProfileLabel" Text="АКТИВНАЯ СБОРКА: сначала создай или выбери сборку выше" Foreground="#11170F" FontSize="12" FontWeight="Bold" TextTrimming="CharacterEllipsis"/></Border>
+                            </StackPanel>
+                        </Border>
+                        <Border Background="#121820" CornerRadius="16" Padding="18" Margin="0,14,0,0">
+                            <StackPanel>
+                                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="145"/><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <ComboBox x:Name="ContentTypeBox" Height="44" Background="#87947D" Foreground="#11170F" BorderBrush="#647158" FontWeight="Bold" Padding="10" SelectionChanged="ContentTypeBox_SelectionChanged">
+                                        <ComboBoxItem Content="Моды" IsSelected="True"/><ComboBoxItem Content="Текстур-паки"/><ComboBoxItem Content="Шейдеры"/><ComboBoxItem Content="Карты"/><ComboBoxItem Content="Датапаки"/><ComboBoxItem Content="Модпаки"/><ComboBoxItem Content="Скины"/>
+                                    </ComboBox>
+                                    <ComboBox x:Name="ModPlatformBox" Grid.Column="1" Height="44" Margin="8,0,0,0" Background="#87947D" Foreground="#11170F" BorderBrush="#647158" FontWeight="Bold" Padding="10" SelectionChanged="ModPlatformBox_SelectionChanged">
+                                        <ComboBoxItem Content="Modrinth" IsSelected="True"/><ComboBoxItem Content="CurseForge"/><ComboBoxItem Content="GitHub Releases"/>
+                                    </ComboBox>
+                                    <TextBox x:Name="ModSearchBox" Grid.Column="2" Height="44" Margin="10,0" Background="#1B242D" Foreground="#EDF1F4" BorderBrush="#29343E" Padding="12" VerticalContentAlignment="Center" FontSize="13"/>
+                                    <Button x:Name="SearchContentButton" Grid.Column="3" Content="Найти моды" Style="{StaticResource DarkButton}" Click="SearchMods_Click"/>
+                                </Grid>
+                                <StackPanel Orientation="Horizontal" Margin="2,9,0,0">
+                                    <Border Background="#87947D" BorderBrush="#647158" BorderThickness="1" CornerRadius="8" Padding="10,5" Margin="0,0,8,0"><TextBlock x:Name="ContentSelectionText" Text="КОНТЕНТ: МОДЫ" Foreground="#11170F" FontSize="10" FontWeight="Bold"/></Border>
+                                    <Border Background="#87947D" BorderBrush="#647158" BorderThickness="1" CornerRadius="8" Padding="10,5"><TextBlock x:Name="PlatformSelectionText" Text="ИСТОЧНИК: MODRINTH" Foreground="#11170F" FontSize="10" FontWeight="Bold"/></Border>
+                                </StackPanel>
+                                <Grid x:Name="DataPackWorldPanel" Margin="0,9,0,0" Visibility="Collapsed"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBlock Text="Установить датапак в мир:" Foreground="#BFC9D2" VerticalAlignment="Center" Margin="0,0,10,0"/><ComboBox x:Name="DataPackWorldBox" Grid.Column="1" Height="38" Background="#87947D" Foreground="#11170F" BorderBrush="#647158" FontWeight="Bold" Padding="8"/></Grid>
+                                <Grid x:Name="CurseForgeKeyPanel" Margin="0,10,0,0" Visibility="Collapsed">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <PasswordBox x:Name="CurseForgeKeyBox" Height="38" Background="#171F29" Foreground="#E3E9EF" BorderBrush="#29343E" Padding="10"/>
+                                    <TextBlock Grid.Column="1" Text="Нужен одобренный ключ API CurseForge" Foreground="#9AA5B0" FontSize="10" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                </Grid>
+                                <ListBox x:Name="ModsList" Height="320" Margin="0,12,0,0" Background="#0F141A" BorderThickness="0" Foreground="#E4EAF0" SelectionChanged="ModsList_SelectionChanged" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                    <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem"><Setter Property="Padding" Value="12"/><Setter Property="Margin" Value="0,3"/><Setter Property="Background" Value="#171F29"/><Setter Property="Foreground" Value="#E4EAF0"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem"><Border x:Name="row" Background="{TemplateBinding Background}" CornerRadius="10" Padding="{TemplateBinding Padding}"><ContentPresenter/></Border><ControlTemplate.Triggers><Trigger Property="IsSelected" Value="True"><Setter TargetName="row" Property="Background" Value="#26352D"/></Trigger><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="row" Property="Background" Value="#202B34"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style></ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate><DataTemplate>
+                                        <Grid MinHeight="64">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="58"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <Border Width="48" Height="48" CornerRadius="10" Background="#202B34" VerticalAlignment="Center" ClipToBounds="True">
+                                                <Image Source="{Binding IconUrl}" Stretch="UniformToFill" ToolTip="Обложка мода"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="7,0,12,0">
+                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Description}" Foreground="#9AA5B0" FontSize="10" TextWrapping="Wrap" MaxHeight="34" Margin="0,3,0,0"/>
+                                                <TextBlock Text="{Binding Details}" Foreground="#71808E" FontSize="9" Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="2" Content="Страница ↗" Style="{StaticResource DarkButton}" Padding="11,8" FontSize="10" VerticalAlignment="Center" Click="OpenModPage_Click" ToolTip="Открыть официальную страницу мода"/>
+                                        </Grid>
+                                    </DataTemplate></ListBox.ItemTemplate>
+                                </ListBox>
+                                <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="180"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="ModsStatusText" Text="Выбери сборку и найди мод или текстур-пак." Foreground="#8995A1" FontSize="11" VerticalAlignment="Center"/>
+                                    <ComboBox x:Name="ModFileBox" Grid.Column="1" Height="42" Background="#1B242D" Foreground="#EDF1F4" BorderBrush="#29343E" Padding="10" DisplayMemberPath="DisplayName"/>
+                                    <Button x:Name="InstallModButton" Grid.Column="2" Content="Установить мод" Style="{StaticResource RoundButton}" Padding="18,12" Margin="10,0,0,0" Click="InstallMod_Click"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
+
+
+======================== FILE: work\GastLauncher\MainWindow.xaml.cs ========================
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
+using System.Net.Http;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Text.Json;
+using CmlLib.Core;
+using CmlLib.Core.Auth;
+using CmlLib.Core.Auth.Microsoft;
+using CmlLib.Core.ModLoaders.FabricMC;
+using CmlLib.Core.ModLoaders.QuiltMC;
+using CmlLib.Core.Installer.Forge;
+using CmlLib.Core.ProcessBuilder;
+
+namespace GastLauncher;
+
+public partial class MainWindow : Window
+{
+    private readonly MinecraftLauncher _launcher;
+    private readonly JELoginHandler _loginHandler;
+    private readonly ObservableCollection<VersionEntry> _visibleVersions = new();
+    private List<VersionEntry> _allVersions = new();
+    private readonly List<VersionEntry> _profiles;
+    private readonly string _minecraftDirectory;
+    private readonly string _profilesFile;
+    private VersionEntry? _activeProfile;
+    private ModSearchResult? _selectedMod;
+    private MSession? _session;
+
+    public MainWindow()
+    {
+        InitializeComponent();
+        _minecraftDirectory = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".minecraft");
+        var gamePath = new MinecraftPath(_minecraftDirectory);
+        _launcher = new MinecraftLauncher(gamePath);
+        _loginHandler = new JELoginHandlerBuilder()
+            .WithAccountManager(System.IO.Path.Combine(_minecraftDirectory, "cml_accounts.json"))
+            .Build();
+        _profilesFile = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GastLauncher", "profiles.json");
+        _profiles = LoadProfiles();
+        _activeProfile = _profiles.LastOrDefault();
+        VersionBox.ItemsSource = _visibleVersions;
+        BuildBox.ItemsSource = _profiles;
+        BuildBox.SelectedItem = _activeProfile;
+        EditionBox.SelectionChanged += EditionBox_SelectionChanged;
+        UpdateEditionControls();
+        ModPlatformBox.SelectedIndex = 0;
+        UpdateBrowserSelectionLabels();
+        Loaded += async (_, _) =>
+        {
+            await RestoreSavedAccountAsync();
+            await LoadVersionsAsync();
+        };
+    }
+
+    private async Task RestoreSavedAccountAsync()
+    {
+        try
+        {
+            _session = await _loginHandler.AuthenticateSilently();
+            AccountLabel.Text = _session.Username;
+            AccountButton.Content = "✓  Microsoft подключён";
+        }
+        catch
+        {
+            _session = null;
+            AccountLabel.Text = "Аккаунт не подключён";
+            AccountButton.Content = "Войти в Microsoft";
+        }
+    }
+
+    private async Task LoadVersionsAsync()
+    {
+        RefreshButton.IsEnabled = false;
+        ProgressBar.Visibility = Visibility.Visible;
+        StatusText.Text = "Загружаю список с серверов Mojang…";
+        try
+        {
+            var versions = await _launcher.GetAllVersionsAsync();
+            var vanilla = versions.Select(v =>
+            {
+                var kind = v.Type?.ToString() ?? "unknown";
+                return new VersionEntry(v.Name, kind, v.Name, v.Name, _minecraftDirectory, "Vanilla");
+            }).ToList();
+            _allVersions = vanilla.Concat(_profiles).ToList();
+            var supportedModVersions = vanilla.Where(v => v.Kind.Equals("release", StringComparison.OrdinalIgnoreCase))
+                .Select(v => v.MinecraftVersion).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            ModGameVersionBox.ItemsSource = supportedModVersions;
+            if (supportedModVersions.Count > 0 && ModGameVersionBox.SelectedItem is null)
+                ModGameVersionBox.SelectedItem = supportedModVersions[0];
+            ApplyFilters();
+            if (_activeProfile is not null) SelectLauncherProfile(_activeProfile);
+            StatusText.Text = "Каталог Mojang обновлён";
+            CountText.Text = $"{_allVersions.Count:N0} версий";
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = "Не удалось загрузить каталог. Проверь подключение к интернету.";
+            CountText.Text = ex.Message.Length > 52 ? ex.Message[..52] + "…" : ex.Message;
+        }
+        finally
+        {
+            RefreshButton.IsEnabled = true;
+            ProgressBar.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        if (SearchBox is null || FilterBox is null || VersionBox is null) return;
+        var query = SearchBox.Text.Trim();
+        var filter = (FilterBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Все версии";
+        var rows = _allVersions.Where(v => string.IsNullOrWhiteSpace(query) || v.Name.Contains(query, StringComparison.OrdinalIgnoreCase) || v.Label.Contains(query, StringComparison.OrdinalIgnoreCase));
+        rows = filter switch
+        {
+            "Релизы" => rows.Where(v => v.Kind.Equals("release", StringComparison.OrdinalIgnoreCase)),
+            "Снапшоты" => rows.Where(v => v.Kind.Contains("snapshot", StringComparison.OrdinalIgnoreCase)),
+            "Бета" => rows.Where(v => v.Kind.Contains("beta", StringComparison.OrdinalIgnoreCase)),
+            "Альфа" => rows.Where(v => v.Kind.Contains("alpha", StringComparison.OrdinalIgnoreCase)),
+            _ => rows
+        };
+
+        var selected = (VersionBox.SelectedItem as VersionEntry)?.Name;
+        _visibleVersions.Clear();
+        foreach (var row in rows) _visibleVersions.Add(row);
+        if (_visibleVersions.Count > 0)
+            VersionBox.SelectedItem = _visibleVersions.FirstOrDefault(v => v.Name == selected) ?? _visibleVersions[0];
+    }
+
+    private async void Login_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            AccountButton.IsEnabled = false;
+            AccountButton.Content = "Открываю вход…";
+            StatusText.Text = "Войди в Microsoft и подтверди владение Minecraft: Java Edition.";
+            _session = await _loginHandler.Authenticate();
+            AccountLabel.Text = _session.Username;
+            AccountButton.Content = "✓  Microsoft подключён";
+            StatusText.Text = "Аккаунт подключён. Можно играть; офлайн доступен с сохранённой сессией.";
+        }
+        catch (Exception ex)
+        {
+            AccountButton.Content = "Войти в Microsoft";
+            StatusText.Text = "Вход не выполнен: " + FriendlyError(ex);
+            MessageBox.Show(this,
+                "Не удалось подключить Microsoft-аккаунт. Убедись, что у него есть Minecraft: Java Edition.\n\n" + FriendlyError(ex),
+                "Вход в Microsoft", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        finally
+        {
+            AccountButton.IsEnabled = true;
+        }
+    }
+
+    private async void Play_Click(object sender, RoutedEventArgs e)
+    {
+        if (IsHorizonSelected())
+        {
+            LaunchHorizon();
+            return;
+        }
+
+        if (VersionBox.SelectedItem is not VersionEntry version)
+        {
+            StatusText.Text = "Сначала выбери версию Minecraft.";
+            return;
+        }
+        if (_session is null)
+        {
+            try
+            {
+                StatusText.Text = "Проверяю сохранённую лицензионную сессию…";
+                _session = await _loginHandler.AuthenticateSilently();
+                AccountLabel.Text = _session.Username;
+            }
+            catch
+            {
+                StatusText.Text = "Войди в Microsoft онлайн, чтобы сохранить лицензионную сессию для следующих запусков.";
+                return;
+            }
+        }
+
+        try
+        {
+            PlayButton.IsEnabled = false;
+            ProgressBar.Visibility = Visibility.Visible;
+            StatusText.Text = $"Подготавливаю Minecraft {version.Name}…";
+            var gameLauncher = version.Loader == "Vanilla" || string.IsNullOrWhiteSpace(version.GameDirectory)
+                ? _launcher
+                : new MinecraftLauncher(new MinecraftPath(version.GameDirectory));
+            gameLauncher.FileProgressChanged += (_, args) => Dispatcher.Invoke(() => StatusText.Text = $"Подготавливаю игру: {args.ProgressedTasks}/{args.TotalTasks} файлов");
+            await gameLauncher.InstallAsync(version.Name);
+            var process = await gameLauncher.BuildProcessAsync(version.Name, new MLaunchOption
+            {
+                Session = _session,
+                MaximumRamMb = Math.Clamp((int)(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1024 / 1024 / 3), 2048, 8192)
+            });
+            process.Start();
+            StatusText.Text = $"Minecraft {version.Name} запущен.";
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = "Не удалось запустить: " + FriendlyError(ex);
+            MessageBox.Show(this, "Не удалось подготовить или запустить выбранную версию.\n\n" + FriendlyError(ex), "Gast Launcher", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            ProgressBar.Visibility = Visibility.Collapsed;
+            PlayButton.IsEnabled = true;
+        }
+    }
+
+    private static string FriendlyError(Exception ex)
+    {
+        var message = ex.GetBaseException().Message;
+        if (message.Contains("403", StringComparison.OrdinalIgnoreCase) || message.Contains("forbidden", StringComparison.OrdinalIgnoreCase))
+            return "Microsoft/Xbox не разрешил авторизацию этого приложения. Для Xbox-входа нужен зарегистрированный и разрешённый Client ID.";
+        if (message.Length > 220) message = message[..220] + "…";
+        return message;
+    }
+
+    private static List<VersionEntry> LoadProfiles()
+    {
+        try
+        {
+            var path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GastLauncher", "profiles.json");
+            return File.Exists(path) ? JsonSerializer.Deserialize<List<VersionEntry>>(File.ReadAllText(path)) ?? new() : new();
+        }
+        catch { return new(); }
+    }
+
+    private void Mods_Click(object sender, RoutedEventArgs e)
+    {
+        PlayView.Visibility = Visibility.Collapsed;
+        ModsView.Visibility = Visibility.Visible;
+        if (_activeProfile is not null) BuildBox.SelectedItem = _activeProfile;
+        if (ModGameVersionBox.Items.Count > 0 && ModGameVersionBox.SelectedItem is null)
+            ModGameVersionBox.SelectedIndex = 0;
+        if (_activeProfile is not null)
+            ProfileLabel.Text = $"АКТИВНАЯ СБОРКА  ·  {_activeProfile.Label}";
+    }
+
+    private async void CreateProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (ModGameVersionBox.SelectedItem is not string gameVersion || ModLoaderBox.SelectedItem is not ComboBoxItem loaderItem)
+        {
+            ModsStatusText.Text = "Сначала выбери версию Minecraft и загрузчик.";
+            return;
+        }
+
+        var loader = loaderItem.Content?.ToString() ?? "Fabric";
+        var buildName = BuildNameBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(buildName))
+        {
+            ModsStatusText.Text = "Дай сборке название.";
+            BuildNameBox.Focus();
+            return;
+        }
+        var buildLabel = $"{buildName} · {gameVersion} · {loader}";
+        var existing = _profiles.FirstOrDefault(p => p.Label.Equals(buildLabel, StringComparison.OrdinalIgnoreCase));
+        if (existing is not null)
+        {
+            _activeProfile = existing;
+            BuildBox.SelectedItem = existing;
+            ProfileLabel.Text = $"АКТИВНАЯ СБОРКА  ·  {existing.Label}";
+            ModsStatusText.Text = "Сборка уже есть. Можно искать контент.";
+            SelectLauncherProfile(existing);
+            return;
+        }
+
+        try
+        {
+            ProfileButton.IsEnabled = false;
+            ProfileButton.Content = "Устанавливаю…";
+            ModsStatusText.Text = $"Устанавливаю {loader} для Minecraft {gameVersion}…";
+            var instanceFolder = $"{SafeFolderToken(buildName)}-{gameVersion}-{loader.ToLowerInvariant()}-{Guid.NewGuid():N}";
+            var instancePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GastLauncher", "instances", instanceFolder);
+            Directory.CreateDirectory(instancePath);
+            var path = new MinecraftPath(instancePath);
+            var instanceLauncher = new MinecraftLauncher(path);
+            string installedVersion;
+            switch (loader)
+            {
+                case "Fabric":
+                    installedVersion = await new FabricInstaller(new HttpClient()).Install(gameVersion, path);
+                    break;
+                case "Quilt":
+                    installedVersion = await new QuiltInstaller(new HttpClient()).Install(gameVersion, path);
+                    break;
+                case "Forge":
+                    installedVersion = await new ForgeInstaller(instanceLauncher).Install(gameVersion, new ForgeInstallOptions { SkipIfAlreadyInstalled = true });
+                    break;
+                case "NeoForge":
+                    installedVersion = await new CmlLib.Core.Installer.NeoForge.NeoForgeInstaller(instanceLauncher).Install(gameVersion,
+                        new ForgeInstallOptions { SkipIfAlreadyInstalled = true });
+                    break;
+                default:
+                    throw new InvalidOperationException("Неизвестный загрузчик.");
+            }
+
+            await instanceLauncher.InstallAsync(installedVersion);
+            var profile = new VersionEntry(installedVersion, "modded", buildLabel, gameVersion, instancePath, loader);
+            _profiles.Add(profile);
+            Directory.CreateDirectory(System.IO.Path.GetDirectoryName(_profilesFile)!);
+            File.WriteAllText(_profilesFile, JsonSerializer.Serialize(_profiles, new JsonSerializerOptions { WriteIndented = true }));
+            _allVersions.Add(profile);
+            _activeProfile = profile;
+            BuildBox.Items.Refresh();
+            BuildBox.SelectedItem = profile;
+            ProfileLabel.Text = $"СОЗДАНА И ВЫБРАНА  ·  {profile.Label}";
+            ModsStatusText.Text = "Сборка готова. Выбери «Моды» или «Текстур-паки» и найди контент.";
+            SelectLauncherProfile(profile);
+        }
+        catch (Exception ex)
+        {
+            ModsStatusText.Text = "Не удалось создать профиль: " + FriendlyError(ex);
+            MessageBox.Show(this, "Не удалось подготовить загрузчик.\n\n" + FriendlyError(ex), "Gast Launcher", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            ProfileButton.IsEnabled = true;
+            ProfileButton.Content = "Создать сборку";
+        }
+    }
+
+    private static string SafeFolderToken(string value)
+    {
+        var token = new string(value.Trim().Select(c => char.IsLetterOrDigit(c) || c is '-' or '_' ? c : '-').ToArray()).Trim('-');
+        if (token.Length > 48) token = token[..48].TrimEnd('-');
+        return string.IsNullOrWhiteSpace(token) ? "build" : token;
+    }
+
+    private void BuildBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (BuildBox.SelectedItem is not VersionEntry profile) return;
+        _activeProfile = profile;
+        ProfileLabel.Text = $"АКТИВНАЯ СБОРКА  ·  {profile.Label}";
+        SelectLauncherProfile(profile);
+    }
+
+    private bool IsResourcePackSelected() => (ContentTypeBox.SelectedItem as ComboBoxItem)?.Content?.ToString() == "Текстур-паки";
+
+    private string SelectedContentType() => (ContentTypeBox.SelectedItem as ComboBoxItem)?.Content?.ToString() switch
+    {
+        "Текстур-паки" => "resourcepack",
+        "Шейдеры" => "shader",
+        "Карты" => "map",
+        "Датапаки" => "datapack",
+        "Модпаки" => "modpack",
+        "Скины" => "skin",
+        _ => "mod"
+    };
+
+    private void ContentTypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (SearchContentButton is null || InstallModButton is null || ModsList is null || ModFileBox is null || ModsStatusText is null) return;
+        var contentType = SelectedContentType();
+        UpdateContentButtons();
+        ModsList.ItemsSource = null;
+        ModFileBox.ItemsSource = null;
+        _selectedMod = null;
+        DataPackWorldPanel.Visibility = contentType == "datapack" ? Visibility.Visible : Visibility.Collapsed;
+        DataPackWorldBox.ItemsSource = _activeProfile is null ? null : GetWorldNames(_activeProfile.GameDirectory);
+        if (DataPackWorldBox.Items.Count > 0) DataPackWorldBox.SelectedIndex = 0;
+        var buttonText = ContentName(contentType);
+        ModsStatusText.Text = $"Выбери сборку и найди {buttonText}.";
+        UpdateBrowserSelectionLabels();
+    }
+
+    private static string ContentName(string type) => type switch { "resourcepack" => "текстур-паки", "shader" => "шейдеры", "map" => "карты", "datapack" => "датапаки", "modpack" => "модпаки", "skin" => "скины", _ => "моды" };
+
+    private static List<string> GetWorldNames(string gameDirectory)
+    {
+        var saves = Path.Combine(gameDirectory, "saves");
+        return Directory.Exists(saves)
+            ? Directory.GetDirectories(saves).Where(d => File.Exists(Path.Combine(d, "level.dat"))).Select(Path.GetFileName).Where(n => !string.IsNullOrWhiteSpace(n)).Cast<string>().OrderBy(n => n, StringComparer.CurrentCultureIgnoreCase).ToList()
+            : new List<string>();
+    }
+
+    private static void InstallMapArchive(string archivePath, string savesDirectory)
+    {
+        var temporary = Path.Combine(Path.GetTempPath(), "GastLauncher-map-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(temporary);
+        try
+        {
+            ZipFile.ExtractToDirectory(archivePath, temporary);
+            var levelFile = Directory.GetFiles(temporary, "level.dat", SearchOption.AllDirectories).FirstOrDefault();
+            if (levelFile is null) throw new InvalidDataException("В архиве карты не найден level.dat.");
+            var source = Path.GetDirectoryName(levelFile)!;
+            var name = Path.GetFileNameWithoutExtension(archivePath);
+            if (string.IsNullOrWhiteSpace(name)) name = "GastLauncher Map";
+            var destination = Path.Combine(savesDirectory, SafeFolderToken(name));
+            for (var suffix = 2; Directory.Exists(destination); suffix++) destination = Path.Combine(savesDirectory, SafeFolderToken(name) + " (" + suffix + ")");
+            CopyDirectory(source, destination);
+        }
+        finally
+        {
+            if (Directory.Exists(temporary)) Directory.Delete(temporary, true);
+        }
+    }
+
+    private static void CopyDirectory(string source, string destination)
+    {
+        Directory.CreateDirectory(destination);
+        foreach (var file in Directory.GetFiles(source)) File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), true);
+        foreach (var directory in Directory.GetDirectories(source)) CopyDirectory(directory, Path.Combine(destination, Path.GetFileName(directory)));
+    }
+
+    private async Task InstallModrinthPackAsync(ModFileChoice file, string profileDirectory)
+    {
+        var temporary = Path.Combine(Path.GetTempPath(), "GastLauncher-pack-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(temporary);
+        var archivePath = Path.Combine(temporary, "pack.mrpack");
+        try
+        {
+            await ModApi.DownloadFileAsync(file.DownloadUrl, archivePath);
+            using var archive = ZipFile.OpenRead(archivePath);
+            var indexEntry = archive.GetEntry("modrinth.index.json") ?? throw new InvalidDataException("Это не корректный Modrinth-модпак: не найден modrinth.index.json.");
+            ModrinthPackIndex index;
+            await using (var stream = indexEntry.Open())
+                index = await JsonSerializer.DeserializeAsync<ModrinthPackIndex>(stream, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? throw new InvalidDataException("Не удалось прочитать список файлов модпака.");
+
+            if (!string.IsNullOrWhiteSpace(index.Dependencies.Minecraft) && index.Dependencies.Minecraft != _activeProfile!.MinecraftVersion)
+                throw new InvalidOperationException($"Этот модпак рассчитан на Minecraft {index.Dependencies.Minecraft}, а сборка использует {_activeProfile.MinecraftVersion}. Создай сборку для нужной версии.");
+            var expectedLoader = index.Dependencies.FabricLoader is not null ? "fabric" : index.Dependencies.Forge is not null ? "forge" : index.Dependencies.NeoForge is not null ? "neoforge" : index.Dependencies.QuiltLoader is not null ? "quilt" : null;
+            if (expectedLoader is not null && !expectedLoader.Equals(_activeProfile!.Loader, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException($"Модпак требует {expectedLoader}, а в выбранной сборке установлен {_activeProfile.Loader}. Создай сборку с нужным загрузчиком.");
+
+            foreach (var packFile in index.Files)
+            {
+                if (packFile.Env?.Client?.Equals("unsupported", StringComparison.OrdinalIgnoreCase) == true) continue;
+                var destination = SafePackPath(profileDirectory, packFile.Path);
+                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                var downloaded = Path.Combine(temporary, Guid.NewGuid().ToString("N") + ".download");
+                try
+                {
+                    var sourceUrl = packFile.Downloads.FirstOrDefault() ?? throw new InvalidDataException($"Нет ссылки для файла {packFile.Path}.");
+                    await ModApi.DownloadFileAsync(sourceUrl, downloaded);
+                    if (packFile.Hashes.TryGetValue("sha1", out var expectedSha1))
+                    {
+                        await using var input = File.OpenRead(downloaded);
+                        var actualSha1 = Convert.ToHexString(await System.Security.Cryptography.SHA1.HashDataAsync(input)).ToLowerInvariant();
+                        if (!actualSha1.Equals(expectedSha1, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException($"Проверка файла {packFile.Path} не прошла.");
+                    }
+                    File.Move(downloaded, destination, true);
+                }
+                finally { if (File.Exists(downloaded)) File.Delete(downloaded); }
+            }
+
+            foreach (var overrideName in new[] { "overrides", "client-overrides" })
+            {
+                if (!archive.Entries.Any(e => e.FullName.StartsWith(overrideName + "/", StringComparison.Ordinal))) continue;
+                var overrideDirectory = Path.Combine(temporary, overrideName);
+                Directory.CreateDirectory(overrideDirectory);
+                foreach (var entry in archive.Entries.Where(e => e.FullName.StartsWith(overrideName + "/", StringComparison.Ordinal)))
+                {
+                    var relative = entry.FullName[(overrideName.Length + 1)..];
+                    if (string.IsNullOrEmpty(relative)) continue;
+                    var target = SafePackPath(overrideDirectory, relative);
+                    if (entry.FullName.EndsWith('/')) Directory.CreateDirectory(target);
+                    else
+                    {
+                        Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                        await using var input = entry.Open();
+                        await using var output = File.Create(target);
+                        await input.CopyToAsync(output);
+                    }
+                }
+                CopyDirectory(overrideDirectory, profileDirectory);
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(temporary)) Directory.Delete(temporary, true);
+        }
+    }
+
+    private static string SafePackPath(string root, string relative)
+    {
+        if (string.IsNullOrWhiteSpace(relative) || Path.IsPathRooted(relative)) throw new InvalidDataException("В архиве найден недопустимый путь.");
+        var fullRoot = Path.GetFullPath(root) + Path.DirectorySeparatorChar;
+        var fullPath = Path.GetFullPath(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar)));
+        if (!fullPath.StartsWith(fullRoot, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("В архиве найден путь за пределами папки сборки.");
+        return fullPath;
+    }
+
+    private void UpdateContentButtons()
+    {
+        if (SearchContentButton is null || InstallModButton is null) return;
+        var type = SelectedContentType();
+        SearchContentButton.Content = "Найти " + ContentName(type);
+        InstallModButton.Content = type switch { "map" => "Установить карту", "datapack" => "Установить датапак", "modpack" => "Импортировать пак", "shader" => "Установить шейдер", "skin" => "Открыть скины", "resourcepack" => "Установить пак", _ => "Установить мод" };
+    }
+
+    private void SelectLauncherProfile(VersionEntry profile)
+    {
+        FilterBox.SelectedIndex = 0;
+        ApplyFilters();
+        VersionBox.SelectedItem = _visibleVersions.FirstOrDefault(v => v.Name == profile.Name && v.GameDirectory == profile.GameDirectory);
+    }
+
+    private void ModPlatformBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateBrowserSelectionLabels();
+        if (CurseForgeKeyPanel is null || ModPlatformBox.SelectedItem is not ComboBoxItem item) return;
+        CurseForgeKeyPanel.Visibility = item.Content?.ToString() == "CurseForge" ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void UpdateBrowserSelectionLabels()
+    {
+        if (ContentSelectionText is null || PlatformSelectionText is null) return;
+        var content = (ContentTypeBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Моды";
+        var platform = (ModPlatformBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Modrinth";
+        ContentSelectionText.Text = $"КОНТЕНТ: {content.ToUpperInvariant()}";
+        PlatformSelectionText.Text = $"ИСТОЧНИК: {platform.ToUpperInvariant()}";
+    }
+
+    private async void SearchMods_Click(object sender, RoutedEventArgs e)
+    {
+        var contentType = SelectedContentType();
+        if (contentType == "skin")
+        {
+            Process.Start(new ProcessStartInfo("https://www.minecraft.net/msaprofile/mygames/editskin") { UseShellExecute = true });
+            ModsStatusText.Text = "Открыл управление скином Minecraft. После загрузки PNG выбери её на странице профиля.";
+            return;
+        }
+        if (_activeProfile is null)
+        {
+            ModsStatusText.Text = "Сначала создай сборку с загрузчиком.";
+            return;
+        }
+        var query = ModSearchBox.Text.Trim();
+        if (query.Length < 2)
+        {
+            ModsStatusText.Text = IsResourcePackSelected() ? "Введи название текстур-пака для поиска." : "Введи название мода для поиска.";
+            return;
+        }
+
+        var platform = (ModPlatformBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Modrinth";
+        var loader = _activeProfile.Loader;
+        if (platform == "GitHub Releases" && contentType != "mod")
+        {
+            ModsStatusText.Text = "GitHub Releases поддерживает поиск модов .jar. Остальные материалы ищи через Modrinth или CurseForge.";
+            return;
+        }
+        if (platform == "CurseForge" && contentType == "datapack")
+        {
+            ModsStatusText.Text = "Для датапаков выбери Modrinth: в CurseForge API нет надёжной фильтрации Java-датапаков.";
+            return;
+        }
+        try
+        {
+            ModsStatusText.Text = $"Ищу моды в {platform}…";
+            ModsList.ItemsSource = null;
+            ModFileBox.ItemsSource = null;
+            _selectedMod = null;
+            var apiType = contentType == "map" ? "modpack" : contentType;
+            var results = platform switch
+            {
+                "CurseForge" => await ModApi.SearchCurseForgeAsync(query, _activeProfile.MinecraftVersion, loader, CurseForgeKeyBox.Password, apiType),
+                "GitHub Releases" => await ModApi.SearchGitHubModsAsync(query, _activeProfile.MinecraftVersion, loader),
+                _ => await ModApi.SearchModrinthAsync(query, _activeProfile.MinecraftVersion, loader, apiType)
+            };
+            if (contentType == "map") results = results.Select(r => r with { ProjectType = "map" }).ToList();
+            ModsList.ItemsSource = results;
+            var contentName = ContentName(contentType);
+            ModsStatusText.Text = results.Count == 0 ? $"Подходящих {contentName} для этой версии нет." : $"Найдено {contentName}: {results.Count}. Выбери проект, затем его файл.";
+        }
+        catch (Exception ex)
+        {
+            ModsStatusText.Text = "Поиск не выполнен: " + FriendlyError(ex);
+        }
+    }
+
+    private async void ModsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ModsList.SelectedItem is not ModSearchResult mod || _activeProfile is null) return;
+        _selectedMod = mod;
+        try
+        {
+            ModsStatusText.Text = $"Загружаю файлы проекта {mod.Title}…";
+            var versions = mod.Platform switch
+            {
+                "CurseForge" => await ModApi.GetCurseForgeVersionsAsync(mod.Id, _activeProfile.MinecraftVersion, _activeProfile.Loader, CurseForgeKeyBox.Password, mod.ProjectType == "map" ? "modpack" : mod.ProjectType),
+                "GitHub Releases" => await ModApi.GetGitHubReleaseAssetsAsync(mod.Id),
+                _ => await ModApi.GetModrinthVersionsAsync(mod.Id, _activeProfile.MinecraftVersion, _activeProfile.Loader, mod.ProjectType == "map" ? "modpack" : mod.ProjectType)
+            };
+            ModFileBox.ItemsSource = versions;
+            ModFileBox.SelectedIndex = versions.Count > 0 ? 0 : -1;
+            ModsStatusText.Text = versions.Count == 0 ? "У этого проекта нет совместимых файлов." : $"Доступных файлов: {versions.Count}. Выбран последний файл.";
+        }
+        catch (Exception ex)
+        {
+            ModFileBox.ItemsSource = null;
+            ModsStatusText.Text = "Не удалось получить версии: " + FriendlyError(ex);
+        }
+    }
+
+    private void OpenModPage_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { DataContext: ModSearchResult mod }) return;
+        try
+        {
+            Process.Start(new ProcessStartInfo(mod.OfficialPageUrl) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            ModsStatusText.Text = "Не удалось открыть страницу мода: " + FriendlyError(ex);
+        }
+    }
+
+    private async void InstallMod_Click(object sender, RoutedEventArgs e)
+    {
+        var contentType = SelectedContentType();
+        if (contentType == "skin")
+        {
+            Process.Start(new ProcessStartInfo("https://www.minecraft.net/msaprofile/mygames/editskin") { UseShellExecute = true });
+            return;
+        }
+        if (_activeProfile is null || ModFileBox.SelectedItem is not ModFileChoice file)
+        {
+            ModsStatusText.Text = "Выбери профиль, мод и его файл.";
+            return;
+        }
+        var apiKey = CurseForgeKeyBox.Password;
+        var installed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            InstallModButton.IsEnabled = false;
+            InstallModButton.Content = "Скачиваю…";
+            var contentDirectory = contentType switch
+            {
+                "resourcepack" => Path.Combine(_activeProfile.GameDirectory, "resourcepacks"),
+                "shader" => Path.Combine(_activeProfile.GameDirectory, "shaderpacks"),
+                "datapack" when DataPackWorldBox.SelectedItem is string world => Path.Combine(_activeProfile.GameDirectory, "saves", world, "datapacks"),
+                "map" => Path.Combine(_activeProfile.GameDirectory, "saves", SafeFolderToken(file.DisplayName)),
+                "modpack" => Path.Combine(_activeProfile.GameDirectory, "modpacks"),
+                _ => Path.Combine(_activeProfile.GameDirectory, "mods")
+            };
+            if (contentType == "datapack" && DataPackWorldBox.SelectedItem is not string)
+                throw new InvalidOperationException("Создай мир в этой сборке, затем выбери его для установки датапака.");
+            Directory.CreateDirectory(contentDirectory);
+            if (contentType == "map")
+            {
+                var archive = Path.Combine(Path.GetTempPath(), ModApi.GetSafeFileName(file));
+                try
+                {
+                    await ModApi.DownloadModAsync(file, apiKey, archive);
+                    InstallMapArchive(archive, contentDirectory);
+                }
+                finally { if (File.Exists(archive)) File.Delete(archive); }
+                installed.Add(contentDirectory);
+            }
+            else if (contentType is "modpack")
+            {
+                if (file.Platform == "Modrinth")
+                {
+                    await InstallModrinthPackAsync(file, _activeProfile.GameDirectory);
+                    installed.Add(contentDirectory);
+                }
+                else
+                {
+                    var destination = Path.Combine(contentDirectory, ModApi.GetSafeFileName(file));
+                    await ModApi.DownloadModAsync(file, apiKey, destination);
+                    installed.Add(destination);
+                }
+            }
+            else if (contentType is "resourcepack" or "shader" or "datapack")
+            {
+                var destination = System.IO.Path.Combine(contentDirectory, ModApi.GetSafeFileName(file));
+                await ModApi.DownloadModAsync(file, apiKey, destination);
+                installed.Add(destination);
+            }
+            else
+            {
+                await InstallModAndRequiredAsync(file, contentDirectory, apiKey, installed);
+            }
+            ModsStatusText.Text = contentType switch
+            {
+                "resourcepack" => $"Текстур-пак добавлен в сборку «{_activeProfile.Label}». Включи его в меню «Наборы ресурсов».",
+                "shader" => $"Шейдер сохранён в shaderpacks сборки. Для запуска нужен Iris или OptiFine.",
+                "datapack" => $"Датапак добавлен в выбранный мир «{DataPackWorldBox.SelectedItem}».",
+                "map" => $"Карта добавлена в миры сборки «{_activeProfile.Label}».",
+                "modpack" when file.Platform == "Modrinth" => $"Модпак «{file.DisplayName}» установлен в сборку «{_activeProfile.Label}».",
+                "modpack" => $"Архив модпака CurseForge сохранён в папке modpacks сборки. CurseForge-пак требует импорта через CurseForge; прямой импорт пока недоступен.",
+                _ => $"Мод установлен в сборку «{_activeProfile.Label}». Запусти её на вкладке «Играть»."
+            };
+        }
+        catch (Exception ex)
+        {
+            ModsStatusText.Text = "Не удалось установить контент: " + FriendlyError(ex);
+            MessageBox.Show(this, "Не удалось скачать или установить выбранный файл.\n\n" + FriendlyError(ex), "Gast Launcher", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        finally
+        {
+            InstallModButton.IsEnabled = true;
+            UpdateContentButtons();
+        }
+    }
+
+    private async Task InstallModAndRequiredAsync(ModFileChoice file, string modsDirectory, string apiKey, HashSet<string> installed)
+    {
+        if (!installed.Add(file.ProjectId)) return;
+        ModsStatusText.Text = $"Скачиваю {file.DisplayName}…";
+        var destination = System.IO.Path.Combine(modsDirectory, ModApi.GetSafeFileName(file));
+        await ModApi.DownloadModAsync(file, apiKey, destination);
+        foreach (var dependency in file.RequiredDependencies)
+        {
+            if (installed.Contains(dependency.ProjectId)) continue;
+            ModFileChoice? dependencyFile = null;
+            if (file.Platform == "Modrinth")
+            {
+                if (!string.IsNullOrWhiteSpace(dependency.VersionId))
+                    dependencyFile = await ModApi.GetModrinthVersionAsync(dependency.VersionId);
+                else
+                {
+                    var choices = await ModApi.GetModrinthVersionsAsync(dependency.ProjectId, _activeProfile!.MinecraftVersion, _activeProfile.Loader);
+                    dependencyFile = choices.FirstOrDefault();
+                }
+            }
+            else
+            {
+                var choices = await ModApi.GetCurseForgeVersionsAsync(dependency.ProjectId, _activeProfile!.MinecraftVersion, _activeProfile.Loader, apiKey);
+                dependencyFile = choices.FirstOrDefault();
+            }
+            if (dependencyFile is not null)
+                await InstallModAndRequiredAsync(dependencyFile, modsDirectory, apiKey, installed);
+        }
+    }
+
+    private void Refresh_Click(object sender, RoutedEventArgs e) => _ = LoadVersionsAsync();
+    private void SearchBox_TextChanged(object sender, TextChangedEventArgs e) => ApplyFilters();
+    private void FilterBox_SelectionChanged(object sender, SelectionChangedEventArgs e) => ApplyFilters();
+    private void VersionBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateEditionControls();
+    }
+
+    private void EditionBox_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateEditionControls();
+
+    private bool IsHorizonSelected() => (EditionBox.SelectedItem as ComboBoxItem)?.Content?.ToString()?.StartsWith("Rust Edition", StringComparison.Ordinal) == true;
+
+    private void UpdateEditionControls()
+    {
+        if (EditionBox is null || VersionFilterPanel is null || VersionBox is null) return;
+        var horizon = IsHorizonSelected();
+        VersionFilterPanel.Visibility = horizon ? Visibility.Collapsed : Visibility.Visible;
+        VersionBox.Visibility = horizon ? Visibility.Collapsed : Visibility.Visible;
+        RustEditionPanel.Visibility = horizon ? Visibility.Visible : Visibility.Collapsed;
+        SelectedVersionBadge.Text = horizon ? "Horizon · 26.3" : (VersionBox.SelectedItem as VersionEntry)?.Name ?? "Загрузка…";
+        if (horizon)
+        {
+            VersionMeta.Text = "Неофициальная Rust-версия · собственный Microsoft-вход и установщик Horizon";
+            PlayButton.Content = "▶   HORIZON";
+            EditionHint.Text = "Откроется Horizon Launcher";
+        }
+        else
+        {
+            VersionMeta.Text = VersionBox.SelectedItem is VersionEntry version
+                ? (version.Loader == "Vanilla" ? $"{KindLabel(version.Kind)}  ·  Оригинальный клиент Minecraft" : $"{version.Loader.ToUpperInvariant()}  ·  отдельный профиль с модами")
+                : "Выбери версию Minecraft";
+            PlayButton.Content = "▶   ИГРАТЬ";
+            EditionHint.Text = "Оригинальный Java-клиент";
+        }
+    }
+
+    private void LaunchHorizon()
+    {
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var launcherPath = Path.Combine(localAppData, "Programs", "Horizon Launcher", "horizon-launcher.exe");
+        if (!File.Exists(launcherPath))
+        {
+            var answer = MessageBox.Show(this,
+                "Rust Edition здесь называется Horizon. Для первого запуска нужен официальный Horizon Launcher: в нём потребуется войти в Microsoft и подготовить Minecraft Java 26.3. Открыть страницу проекта?",
+                "Horizon не установлен", MessageBoxButton.YesNo, MessageBoxImage.Information);
+            if (answer == MessageBoxResult.Yes)
+                Process.Start(new ProcessStartInfo("https://playhorizon.dev/") { UseShellExecute = true });
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo(launcherPath) { UseShellExecute = true });
+            StatusText.Text = "Открылся Horizon Launcher. В нём выбери установленную версию и нажми Play.";
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = "Не удалось открыть Horizon: " + FriendlyError(ex);
+        }
+    }
+    private static string KindLabel(string kind) => kind.ToLowerInvariant() switch
+    {
+        "release" => "ОФИЦИАЛЬНЫЙ РЕЛИЗ",
+        "snapshot" => "СНАПШОТ",
+        "old_beta" => "СТАРАЯ БЕТА",
+        "old_alpha" => "СТАРАЯ АЛЬФА",
+        _ => kind.ToUpperInvariant()
+    };
+    private void Versions_Click(object sender, RoutedEventArgs e)
+    {
+        ModsView.Visibility = Visibility.Collapsed;
+        PlayView.Visibility = Visibility.Visible;
+        SearchBox.Focus();
+    }
+    private void Settings_Click(object sender, RoutedEventArgs e) => MessageBox.Show(this, "Gast Launcher использует стандартную папку .minecraft.\nФайлы игры загружаются с официальных серверов Minecraft.", "Настройки", MessageBoxButton.OK, MessageBoxImage.Information);
+    private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) { if (e.LeftButton == MouseButtonState.Pressed) DragMove(); }
+    private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+    private void Close_Click(object sender, RoutedEventArgs e) => Close();
+
+}
+
+internal sealed class ModrinthPackIndex
+{
+    public ModrinthPackDependencies Dependencies { get; set; } = new();
+    public List<ModrinthPackFile> Files { get; set; } = new();
+}
+
+internal sealed class ModrinthPackDependencies
+{
+    public string? Minecraft { get; set; }
+    public string? FabricLoader { get; set; }
+    public string? Forge { get; set; }
+    public string? NeoForge { get; set; }
+    public string? QuiltLoader { get; set; }
+}
+
+internal sealed class ModrinthPackFile
+{
+    public string Path { get; set; } = "";
+    public Dictionary<string, string> Hashes { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public List<string> Downloads { get; set; } = new();
+    public ModrinthPackEnvironment? Env { get; set; }
+}
+
+internal sealed class ModrinthPackEnvironment
+{
+    public string? Client { get; set; }
+    public string? Server { get; set; }
+}
+
+internal sealed record VersionEntry(string Name, string Kind, string Label, string MinecraftVersion, string GameDirectory, string Loader)
+{
+    public override string ToString() => Label;
+}
+
+
+======================== FILE: work\GastLauncher\ModApi.cs ========================
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace GastLauncher;
+
+internal static class ModApi
+{
+    private static readonly HttpClient Modrinth = CreateClient("GastLauncher/1.0 (Minecraft mod browser)");
+    private const string CurseForgeBase = "https://api.curseforge.com/v1";
+
+    private static HttpClient CreateClient(string userAgent)
+    {
+        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(45) };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+        return client;
+    }
+
+    public static async Task<List<ModSearchResult>> SearchModrinthAsync(string query, string gameVersion, string loader, string projectType)
+    {
+        var facetsList = new List<string[]> { new[] { $"project_type:{projectType}" }, new[] { $"versions:{gameVersion}" } };
+        if (projectType == "mod") facetsList.Add(new[] { $"categories:{loader.ToLowerInvariant()}" });
+        if (projectType == "modpack" && loader.Length > 0) facetsList.Add(new[] { $"categories:{loader.ToLowerInvariant()}" });
+        var facets = System.Text.Json.JsonSerializer.Serialize(facetsList);
+        var url = $"https://api.modrinth.com/v2/search?query={Uri.EscapeDataString(query)}&limit=30&facets={Uri.EscapeDataString(facets)}";
+        using var response = await Modrinth.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+        var body = await response.Content.ReadFromJsonAsync<ModrinthSearchResponse>() ?? new();
+        return body.Hits.Select(x => new ModSearchResult("Modrinth", x.ProjectId, x.Title, x.Description,
+            x.Author, x.Downloads, x.Slug, x.IconUrl, projectType)).ToList();
+    }
+
+    public static async Task<List<ModFileChoice>> GetModrinthVersionsAsync(string projectId, string gameVersion, string loader, string projectType = "mod")
+    {
+        var games = Uri.EscapeDataString(System.Text.Json.JsonSerializer.Serialize(new[] { gameVersion }));
+        var versionLoader = projectType == "resourcepack" ? "minecraft" : loader.ToLowerInvariant();
+        var loaderFilter = projectType is "mod" or "resourcepack" ? $"&loaders={Uri.EscapeDataString(System.Text.Json.JsonSerializer.Serialize(new[] { versionLoader }))}" : "";
+        using var response = await Modrinth.GetAsync($"https://api.modrinth.com/v2/project/{Uri.EscapeDataString(projectId)}/version?game_versions={games}{loaderFilter}");
+        response.EnsureSuccessStatusCode();
+        var versions = await response.Content.ReadFromJsonAsync<List<ModrinthVersion>>() ?? new();
+        return versions.Select(v => new ModFileChoice("Modrinth", projectId, v.Id, v.VersionNumber,
+            v.Files.FirstOrDefault(f => f.Primary)?.Filename ?? v.Files.FirstOrDefault()?.Filename ?? v.Name,
+            v.Name, v.Files.FirstOrDefault(f => f.Primary)?.Url ?? v.Files.FirstOrDefault()?.Url ?? "",
+            v.Dependencies.Where(d => projectType == "mod" && d.DependencyType == "required").Select(d => new ModDependency(d.ProjectId, d.VersionId)).ToList(), projectType)).ToList();
+    }
+
+    public static async Task<ModFileChoice> GetModrinthVersionAsync(string versionId)
+    {
+        using var response = await Modrinth.GetAsync($"https://api.modrinth.com/v2/version/{Uri.EscapeDataString(versionId)}");
+        response.EnsureSuccessStatusCode();
+        var v = await response.Content.ReadFromJsonAsync<ModrinthVersion>() ?? throw new InvalidOperationException("Modrinth не вернул данные версии.");
+        var file = v.Files.FirstOrDefault(f => f.Primary) ?? v.Files.FirstOrDefault();
+        return new ModFileChoice("Modrinth", v.ProjectId, v.Id, v.VersionNumber, file?.Filename ?? v.Name,
+            v.Name, file?.Url ?? "", v.Dependencies.Where(d => d.DependencyType == "required").Select(d => new ModDependency(d.ProjectId, d.VersionId)).ToList());
+    }
+
+    public static async Task<List<ModSearchResult>> SearchCurseForgeAsync(string query, string gameVersion, string loader, string apiKey, string projectType)
+    {
+        var client = CreateCurseClient(apiKey);
+        var classId = CurseClassId(projectType);
+        var loaderFilter = projectType == "mod" ? $"&modLoaderType={CurseLoaderId(loader)}" : "";
+        var url = $"{CurseForgeBase}/mods/search?gameId=432&classId={classId}&gameVersion={Uri.EscapeDataString(gameVersion)}{loaderFilter}&searchFilter={Uri.EscapeDataString(query)}&pageSize=30&index=0";
+        using var response = await client.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+        var body = await response.Content.ReadFromJsonAsync<CurseResponse<List<CurseMod>>>() ?? new();
+        return (body.Data ?? new()).Select(x => new ModSearchResult("CurseForge", x.Id.ToString(), x.Name,
+            x.Summary, x.Authors.FirstOrDefault()?.Name ?? "", x.DownloadCount, x.Slug, x.Logo?.Url, projectType)).ToList();
+    }
+
+    public static async Task<List<ModFileChoice>> GetCurseForgeVersionsAsync(string projectId, string gameVersion, string loader, string apiKey, string projectType = "mod")
+    {
+        var client = CreateCurseClient(apiKey);
+        var loaderFilter = projectType == "mod" ? $"&modLoaderType={CurseLoaderId(loader)}" : "";
+        var url = $"{CurseForgeBase}/mods/{Uri.EscapeDataString(projectId)}/files?gameVersion={Uri.EscapeDataString(gameVersion)}{loaderFilter}&pageSize=50&index=0";
+        using var response = await client.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+        var body = await response.Content.ReadFromJsonAsync<CurseResponse<List<CurseFile>>>() ?? new();
+        return (body.Data ?? new()).Where(x => x.IsAvailable).Select(x => new ModFileChoice("CurseForge", projectId,
+            x.Id.ToString(), x.DisplayName, x.FileName, x.DisplayName, x.DownloadUrl ?? "",
+            projectType == "mod" ? x.Dependencies.Where(d => d.RelationType == 3).Select(d => new ModDependency(d.ModId.ToString(), null)).ToList() : new(), projectType)).ToList();
+    }
+
+    public static async Task<List<ModSearchResult>> SearchGitHubModsAsync(string query, string gameVersion, string loader)
+    {
+        using var client = CreateClient("GastLauncher/1.0 (+https://github.com)");
+        client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+        var url = $"https://api.github.com/search/repositories?q={Uri.EscapeDataString(query + " minecraft mod " + gameVersion + " " + loader)}&sort=stars&order=desc&per_page=20";
+        using var response = await client.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+        var body = await response.Content.ReadFromJsonAsync<GitHubSearchResponse>() ?? new();
+        return body.Items.Select(x => new ModSearchResult("GitHub Releases", x.FullName, x.Name, x.Description ?? "Community mod release; check game and loader compatibility.", x.Owner.Login, x.StargazersCount, x.FullName, x.Owner.AvatarUrl, "mod", x.HtmlUrl)).ToList();
+    }
+
+    public static async Task<List<ModFileChoice>> GetGitHubReleaseAssetsAsync(string repository)
+    {
+        using var client = CreateClient("GastLauncher/1.0 (+https://github.com)");
+        client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+        using var response = await client.GetAsync($"https://api.github.com/repos/{repository}/releases?per_page=10");
+        response.EnsureSuccessStatusCode();
+        var releases = await response.Content.ReadFromJsonAsync<List<GitHubRelease>>() ?? new();
+        return releases.SelectMany(release => release.Assets.Where(asset => asset.Name.EndsWith(".jar", StringComparison.OrdinalIgnoreCase))
+            .Select(asset => new ModFileChoice("GitHub Releases", repository, release.TagName, asset.Name, asset.Name,
+                $"{release.Name} · {asset.Name}", asset.BrowserDownloadUrl, new(), "mod"))).ToList();
+    }
+
+    public static async Task DownloadModAsync(ModFileChoice choice, string apiKey, string destination)
+    {
+        var url = choice.DownloadUrl;
+        if (choice.Platform == "CurseForge")
+        {
+            var client = CreateCurseClient(apiKey);
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                using var urlResponse = await client.GetAsync($"{CurseForgeBase}/mods/{Uri.EscapeDataString(choice.ProjectId)}/files/{Uri.EscapeDataString(choice.Id)}/download-url");
+                urlResponse.EnsureSuccessStatusCode();
+                var result = await urlResponse.Content.ReadFromJsonAsync<CurseResponse<string>>();
+                url = result?.Data ?? "";
+            }
+            if (string.IsNullOrWhiteSpace(url)) throw new InvalidOperationException("CurseForge не предоставил прямую ссылку на этот файл.");
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.TryAddWithoutValidation("x-api-key", apiKey);
+            using var downloadResponse = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            downloadResponse.EnsureSuccessStatusCode();
+            await using var input = await downloadResponse.Content.ReadAsStreamAsync();
+            await using var output = File.Create(destination);
+            await input.CopyToAsync(output);
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(url)) throw new InvalidOperationException("У версии мода нет файла для скачивания.");
+            using var response = await Modrinth.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
+            await using var input = await response.Content.ReadAsStreamAsync();
+            await using var output = File.Create(destination);
+            await input.CopyToAsync(output);
+        }
+    }
+
+    public static async Task DownloadFileAsync(string url, string destination)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
+            throw new InvalidOperationException("Ссылка на файл должна быть безопасной HTTPS-ссылкой.");
+        using var response = await Modrinth.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead);
+        response.EnsureSuccessStatusCode();
+        await using var input = await response.Content.ReadAsStreamAsync();
+        await using var output = File.Create(destination);
+        await input.CopyToAsync(output);
+    }
+
+    public static string GetSafeFileName(ModFileChoice choice)
+    {
+        var name = Path.GetFileName(choice.FileName);
+        if (string.IsNullOrWhiteSpace(name)) name = choice.DisplayName + (choice.ContentType == "mod" ? ".jar" : ".zip");
+        foreach (var c in Path.GetInvalidFileNameChars()) name = name.Replace(c, '_');
+        if (choice.ContentType != "mod")
+            return name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) || name.EndsWith(".jar", StringComparison.OrdinalIgnoreCase) ? name : name + ".zip";
+        return name.EndsWith(".jar", StringComparison.OrdinalIgnoreCase) ? name : name + ".jar";
+    }
+
+    private static int CurseClassId(string projectType) => projectType switch
+    {
+        "resourcepack" => 12,
+        "map" => 17,
+        "modpack" => 4471,
+        "shader" => 6552,
+        _ => 6
+    };
+
+    private static HttpClient CreateCurseClient(string apiKey)
+    {
+        if (string.IsNullOrWhiteSpace(apiKey)) throw new InvalidOperationException("Введи одобренный CurseForge API key.");
+        var client = CreateClient("GastLauncher/1.0 (Minecraft mod browser)");
+        client.DefaultRequestHeaders.TryAddWithoutValidation("x-api-key", apiKey);
+        return client;
+    }
+
+    private static int CurseLoaderId(string loader) => loader.ToLowerInvariant() switch
+    {
+        "forge" => 1,
+        "fabric" => 4,
+        "quilt" => 5,
+        "neoforge" => 6,
+        _ => 0
+    };
+
+    private sealed class ModrinthSearchResponse { [JsonPropertyName("hits")] public List<ModrinthHit> Hits { get; set; } = new(); }
+    private sealed class ModrinthHit
+    {
+        [JsonPropertyName("project_id")] public string ProjectId { get; set; } = "";
+        [JsonPropertyName("slug")] public string Slug { get; set; } = "";
+        [JsonPropertyName("title")] public string Title { get; set; } = "";
+        [JsonPropertyName("description")] public string Description { get; set; } = "";
+        [JsonPropertyName("author")] public string Author { get; set; } = "";
+        [JsonPropertyName("downloads")] public long Downloads { get; set; }
+        [JsonPropertyName("icon_url")] public string? IconUrl { get; set; }
+    }
+    private sealed class ModrinthVersion
+    {
+        [JsonPropertyName("id")] public string Id { get; set; } = "";
+        [JsonPropertyName("project_id")] public string ProjectId { get; set; } = "";
+        [JsonPropertyName("name")] public string Name { get; set; } = "";
+        [JsonPropertyName("version_number")] public string VersionNumber { get; set; } = "";
+        [JsonPropertyName("files")] public List<ModrinthFile> Files { get; set; } = new();
+        [JsonPropertyName("dependencies")] public List<ModrinthDependency> Dependencies { get; set; } = new();
+    }
+    private sealed class ModrinthFile
+    {
+        [JsonPropertyName("filename")] public string Filename { get; set; } = "";
+        [JsonPropertyName("url")] public string Url { get; set; } = "";
+        [JsonPropertyName("primary")] public bool Primary { get; set; }
+    }
+    private sealed class ModrinthDependency
+    {
+        [JsonPropertyName("project_id")] public string ProjectId { get; set; } = "";
+        [JsonPropertyName("version_id")] public string? VersionId { get; set; }
+        [JsonPropertyName("dependency_type")] public string DependencyType { get; set; } = "";
+    }
+    private sealed class CurseResponse<T> { [JsonPropertyName("data")] public T? Data { get; set; } }
+    private sealed class CurseMod
+    {
+        [JsonPropertyName("id")] public int Id { get; set; }
+        [JsonPropertyName("name")] public string Name { get; set; } = "";
+        [JsonPropertyName("slug")] public string Slug { get; set; } = "";
+        [JsonPropertyName("summary")] public string Summary { get; set; } = "";
+        [JsonPropertyName("downloadCount")] public long DownloadCount { get; set; }
+        [JsonPropertyName("authors")] public List<CurseAuthor> Authors { get; set; } = new();
+        [JsonPropertyName("logo")] public CurseAsset? Logo { get; set; }
+    }
+    private sealed class CurseAsset { [JsonPropertyName("url")] public string? Url { get; set; } }
+    private sealed class CurseAuthor { [JsonPropertyName("name")] public string Name { get; set; } = ""; }
+    private sealed class CurseFile
+    {
+        [JsonPropertyName("id")] public int Id { get; set; }
+        [JsonPropertyName("displayName")] public string DisplayName { get; set; } = "";
+        [JsonPropertyName("fileName")] public string FileName { get; set; } = "";
+        [JsonPropertyName("downloadUrl")] public string? DownloadUrl { get; set; }
+        [JsonPropertyName("isAvailable")] public bool IsAvailable { get; set; } = true;
+        [JsonPropertyName("dependencies")] public List<CurseDependency> Dependencies { get; set; } = new();
+    }
+    private sealed class CurseDependency
+    {
+        [JsonPropertyName("modId")] public int ModId { get; set; }
+        [JsonPropertyName("relationType")] public int RelationType { get; set; }
+    }
+    private sealed class GitHubSearchResponse { [JsonPropertyName("items")] public List<GitHubRepository> Items { get; set; } = new(); }
+    private sealed class GitHubRepository
+    {
+        [JsonPropertyName("full_name")] public string FullName { get; set; } = "";
+        [JsonPropertyName("name")] public string Name { get; set; } = "";
+        [JsonPropertyName("description")] public string? Description { get; set; }
+        [JsonPropertyName("html_url")] public string HtmlUrl { get; set; } = "";
+        [JsonPropertyName("stargazers_count")] public long StargazersCount { get; set; }
+        [JsonPropertyName("owner")] public GitHubOwner Owner { get; set; } = new();
+    }
+    private sealed class GitHubOwner { [JsonPropertyName("login")] public string Login { get; set; } = ""; [JsonPropertyName("avatar_url")] public string AvatarUrl { get; set; } = ""; }
+    private sealed class GitHubRelease
+    {
+        [JsonPropertyName("tag_name")] public string TagName { get; set; } = "";
+        [JsonPropertyName("name")] public string Name { get; set; } = "";
+        [JsonPropertyName("assets")] public List<GitHubAsset> Assets { get; set; } = new();
+    }
+    private sealed class GitHubAsset { [JsonPropertyName("name")] public string Name { get; set; } = ""; [JsonPropertyName("browser_download_url")] public string BrowserDownloadUrl { get; set; } = ""; }
+}
+
+internal sealed record ModSearchResult(string Platform, string Id, string Title, string Description, string Author, long Downloads, string Slug, string? IconUrl, string ProjectType = "mod", string? ExternalUrl = null)
+{
+    public string Details => $"{Author}  ·  {Downloads:N0} загрузок  ·  {Platform}";
+    public bool IsResourcePack => ProjectType == "resourcepack";
+    public string OfficialPageUrl => ExternalUrl ?? (Platform == "CurseForge"
+        ? $"https://www.curseforge.com/minecraft/{ProjectType switch { "resourcepack" => "texture-packs", "map" => "worlds", "modpack" => "modpacks", "shader" => "shaders", _ => "mc-mods" }}/{Uri.EscapeDataString(Slug)}"
+        : $"https://modrinth.com/{(ProjectType == "map" ? "modpack" : ProjectType)}/{Uri.EscapeDataString(string.IsNullOrWhiteSpace(Slug) ? Id : Slug)}");
+}
+
+internal sealed record ModDependency(string ProjectId, string? VersionId);
+
+internal sealed record ModFileChoice(string Platform, string ProjectId, string Id, string Version, string FileName, string DisplayName, string DownloadUrl, List<ModDependency> RequiredDependencies, string ContentType = "mod")
+{
+    public bool IsResourcePack => ContentType == "resourcepack";
+    public override string ToString() => DisplayName;
+}
+
+
+======================== FILE: work\GastLauncherSetup\GastLauncherSetup.csproj ========================
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>GastLauncherSetup</AssemblyName>
+    <RootNamespace>GastLauncherSetup</RootNamespace>
+    <ApplicationIcon>..\GastLauncher\Assets\gast-launcher.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\outputs\GastLauncher.exe" LogicalName="GastLauncherSetup.Payload.GastLauncher.exe" />
+    <EmbeddedResource Include="..\installer\uninstall.ps1" LogicalName="GastLauncherSetup.Payload.uninstall.ps1" />
+  </ItemGroup>
+</Project>
+
+
+======================== FILE: work\GastLauncherSetup\Program.cs ========================
+namespace GastLauncherSetup;
+
+internal static class Program
+{
+    [STAThread]
+    private static void Main()
+    {
+        ApplicationConfiguration.Initialize();
+        Application.Run(new SetupForm());
+    }
+}
+
+
+======================== FILE: work\GastLauncherSetup\SetupForm.cs ========================
+using Microsoft.Win32;
+using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
+
+namespace GastLauncherSetup;
+
+internal sealed class SetupForm : Form
+{
+    private const string UninstallKey = @"Software\Microsoft\Windows\CurrentVersion\Uninstall\GastLauncher";
+    private readonly TextBox _pathBox = new();
+    private readonly CheckBox _desktopShortcut = new();
+    private readonly CheckBox _launchAfterInstall = new();
+    private readonly Button _installButton = new();
+    private readonly Label _status = new();
+    private readonly ProgressBar _progress = new();
+
+    public SetupForm()
+    {
+        Text = "Установка Gast Launcher";
+        ClientSize = new Size(590, 380);
+        FormBorderStyle = FormBorderStyle.FixedDialog;
+        MaximizeBox = false;
+        MinimizeBox = false;
+        StartPosition = FormStartPosition.CenterScreen;
+        BackColor = Color.FromArgb(12, 16, 21);
+        ForeColor = Color.FromArgb(238, 242, 246);
+        Font = new Font("Segoe UI", 9F);
+
+        var title = new Label
+        {
+            Text = "Установить Gast Launcher",
+            Font = new Font("Segoe UI Semibold", 19F),
+            ForeColor = Color.FromArgb(245, 248, 250),
+            Location = new Point(30, 24),
+            Size = new Size(520, 40)
+        };
+        Controls.Add(title);
+
+        var description = new Label
+        {
+            Text = "Установка создаст ярлыки и добавит Gast Launcher в список приложений Windows.",
+            ForeColor = Color.FromArgb(156, 168, 179),
+            Location = new Point(32, 73),
+            Size = new Size(520, 38)
+        };
+        Controls.Add(description);
+
+        Controls.Add(new Label { Text = "Папка установки", Location = new Point(32, 130), Size = new Size(520, 22) });
+        _pathBox.Location = new Point(32, 155);
+        _pathBox.Size = new Size(425, 28);
+        _pathBox.Text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Gast Launcher");
+        _pathBox.BackColor = Color.FromArgb(28, 36, 44);
+        _pathBox.ForeColor = Color.White;
+        _pathBox.BorderStyle = BorderStyle.FixedSingle;
+        Controls.Add(_pathBox);
+
+        var browse = new Button
+        {
+            Text = "Обзор…",
+            Location = new Point(467, 153),
+            Size = new Size(88, 31),
+            FlatStyle = FlatStyle.Flat,
+            BackColor = Color.FromArgb(34, 43, 52),
+            ForeColor = Color.White
+        };
+        browse.Click += Browse_Click;
+        Controls.Add(browse);
+
+        _desktopShortcut.Text = "Создать ярлык на рабочем столе";
+        _desktopShortcut.Checked = true;
+        _desktopShortcut.Location = new Point(32, 205);
+        _desktopShortcut.Size = new Size(360, 25);
+        Controls.Add(_desktopShortcut);
+
+        _launchAfterInstall.Text = "Запустить Gast Launcher после установки";
+        _launchAfterInstall.Checked = true;
+        _launchAfterInstall.Location = new Point(32, 235);
+        _launchAfterInstall.Size = new Size(390, 25);
+        Controls.Add(_launchAfterInstall);
+
+        _status.Location = new Point(32, 278);
+        _status.Size = new Size(520, 22);
+        _status.ForeColor = Color.FromArgb(150, 163, 174);
+        Controls.Add(_status);
+
+        _progress.Location = new Point(32, 303);
+        _progress.Size = new Size(520, 6);
+        _progress.Visible = false;
+        Controls.Add(_progress);
+
+        var cancel = new Button
+        {
+            Text = "Отмена",
+            Location = new Point(350, 326),
+            Size = new Size(95, 36),
+            FlatStyle = FlatStyle.Flat,
+            BackColor = Color.FromArgb(34, 43, 52),
+            ForeColor = Color.White,
+            DialogResult = DialogResult.Cancel
+        };
+        Controls.Add(cancel);
+        CancelButton = cancel;
+
+        _installButton.Text = "Установить";
+        _installButton.Location = new Point(455, 326);
+        _installButton.Size = new Size(100, 36);
+        _installButton.FlatStyle = FlatStyle.Flat;
+        _installButton.BackColor = Color.FromArgb(168, 240, 122);
+        _installButton.ForeColor = Color.FromArgb(20, 25, 16);
+        _installButton.Font = new Font("Segoe UI Semibold", 9F);
+        _installButton.Click += Install_Click;
+        Controls.Add(_installButton);
+        AcceptButton = _installButton;
+    }
+
+    private void Browse_Click(object? sender, EventArgs e)
+    {
+        using var dialog = new FolderBrowserDialog
+        {
+            Description = "Выбери папку для Gast Launcher",
+            SelectedPath = Directory.Exists(_pathBox.Text) ? _pathBox.Text : Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            ShowNewFolderButton = true
+        };
+        if (dialog.ShowDialog(this) == DialogResult.OK)
+            _pathBox.Text = Path.Combine(dialog.SelectedPath, "Gast Launcher");
+    }
+
+    private void Install_Click(object? sender, EventArgs e)
+    {
+        var installDir = _pathBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(installDir))
+        {
+            MessageBox.Show(this, "Укажи папку установки.", "Gast Launcher", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+        if (!HasDesktopRuntime8())
+        {
+            var result = MessageBox.Show(this,
+                "Для Gast Launcher нужен .NET 8 Desktop Runtime x64. Открыть страницу загрузки Microsoft?",
+                "Нужен .NET 8", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+            if (result == DialogResult.Yes)
+                Process.Start(new ProcessStartInfo("https://dotnet.microsoft.com/en-us/download/dotnet/8.0") { UseShellExecute = true });
+            return;
+        }
+
+        try
+        {
+            _installButton.Enabled = false;
+            _progress.Visible = true;
+            _progress.Style = ProgressBarStyle.Marquee;
+            _status.Text = "Устанавливаю файлы и ярлыки…";
+            Application.DoEvents();
+
+            Directory.CreateDirectory(installDir);
+            var appExe = Path.Combine(installDir, "GastLauncher.exe");
+            using (var resource = OpenResource("GastLauncherSetup.Payload.GastLauncher.exe"))
+            using (var output = File.Create(appExe))
+                resource.CopyTo(output);
+            using (var resource = OpenResource("GastLauncherSetup.Payload.uninstall.ps1"))
+            using (var reader = new StreamReader(resource, Encoding.UTF8))
+                File.WriteAllText(Path.Combine(installDir, "uninstall.ps1"), reader.ReadToEnd(), Encoding.UTF8);
+
+            var startMenuDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Windows", "Start Menu", "Programs", "Gast Launcher");
+            Directory.CreateDirectory(startMenuDir);
+            CreateShortcut(Path.Combine(startMenuDir, "Gast Launcher.lnk"), appExe, installDir);
+            if (_desktopShortcut.Checked)
+                CreateShortcut(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Gast Launcher.lnk"), appExe, installDir);
+
+            using var key = Registry.CurrentUser.CreateSubKey(UninstallKey, true);
+            key.SetValue("DisplayName", "Gast Launcher");
+            key.SetValue("DisplayVersion", "1.0.0");
+            key.SetValue("Publisher", "Gast Launcher");
+            key.SetValue("InstallLocation", installDir);
+            key.SetValue("DisplayIcon", appExe);
+            key.SetValue("UninstallString", $"powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"{Path.Combine(installDir, "uninstall.ps1")}\"");
+            key.SetValue("NoModify", 1, RegistryValueKind.DWord);
+            key.SetValue("NoRepair", 1, RegistryValueKind.DWord);
+
+            if (_launchAfterInstall.Checked)
+                Process.Start(new ProcessStartInfo(appExe) { WorkingDirectory = installDir, UseShellExecute = true });
+            MessageBox.Show(this, "Gast Launcher установлен.", "Готово", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            DialogResult = DialogResult.OK;
+            Close();
+        }
+        catch (Exception ex)
+        {
+            _progress.Visible = false;
+            _status.Text = "Установка не завершена.";
+            _installButton.Enabled = true;
+            MessageBox.Show(this, "Не удалось установить Gast Launcher:\n\n" + ex.Message, "Ошибка установки", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    private static bool HasDesktopRuntime8()
+    {
+        var runtimeDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "dotnet", "shared", "Microsoft.WindowsDesktop.App");
+        if (!Directory.Exists(runtimeDir)) return false;
+        return Directory.EnumerateDirectories(runtimeDir, "8.*").Any();
+    }
+
+    private static Stream OpenResource(string name) => Assembly.GetExecutingAssembly().GetManifestResourceStream(name)
+        ?? throw new FileNotFoundException("В установочный пакет не включён обязательный файл: " + name);
+
+    private static void CreateShortcut(string shortcutPath, string targetPath, string workingDirectory)
+    {
+        var type = Type.GetTypeFromProgID("WScript.Shell") ?? throw new InvalidOperationException("Не удалось создать ярлыки Windows.");
+        dynamic shell = Activator.CreateInstance(type)!;
+        dynamic shortcut = shell.CreateShortcut(shortcutPath);
+        shortcut.TargetPath = targetPath;
+        shortcut.WorkingDirectory = workingDirectory;
+        shortcut.Description = "Запуск Gast Launcher";
+        shortcut.Save();
+        Marshal.FinalReleaseComObject(shortcut);
+        Marshal.FinalReleaseComObject(shell);
+    }
+}
+
+
+======================== FILE: work\installer\GastLauncherSetup.sed ========================
+[Version]
+Class=IEXPRESS
+SEDVersion=3
+[Options]
+PackagePurpose=InstallApp
+ShowInstallProgramWindow=0
+HideExtractAnimation=1
+UseLongFileName=1
+InsideCompressed=0
+CAB_FixedSize=0
+CAB_ResvCodeSigning=0
+RebootMode=N
+InstallPrompt=
+DisplayLicense=
+FinishMessage=
+TargetName=%TargetName%
+FriendlyName=%FriendlyName%
+AppLaunched=%AppLaunched%
+PostInstallCmd=%PostInstallCmd%
+AdminQuietInstCmd=%AdminQuietInstCmd%
+UserQuietInstCmd=%UserQuietInstCmd%
+SourceFiles=SourceFiles
+[Strings]
+TargetName=C:\Users\NUC9 PRO\Documents\Codex\2026-11-07\ghb\outputs\GastLauncherSetup.exe
+FriendlyName=Gast Launcher Setup
+AppLaunched=powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File setup.ps1
+PostInstallCmd=<None>
+AdminQuietInstCmd=
+UserQuietInstCmd=
+FILE0="GastLauncher.exe"
+FILE1="setup.ps1"
+FILE2="uninstall.ps1"
+[SourceFiles]
+SourceFiles0=C:\Users\NUC9 PRO\Documents\Codex\2026-11-07\ghb\work\installer\payload\
+[SourceFiles0]
+%FILE0%=
+%FILE1%=
+%FILE2%=
+
+
+======================== FILE: work\installer\setup.ps1 ========================
+$ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
+[System.Windows.Forms.Application]::EnableVisualStyles()
+
+$sourceDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$exeSource = Join-Path $sourceDir 'GastLauncher.exe'
+$uninstallSource = Join-Path $sourceDir 'uninstall.ps1'
+$defaultDir = Join-Path $env:LOCALAPPDATA 'Programs\Gast Launcher'
+$startMenuDir = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Gast Launcher'
+$registryPath = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\GastLauncher'
+
+function Has-DotNetDesktop8 {
+    $dotnetDir = Join-Path $env:ProgramFiles 'dotnet\shared\Microsoft.WindowsDesktop.App'
+    if (-not (Test-Path $dotnetDir)) { return $false }
+    return [bool](Get-ChildItem $dotnetDir -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^8\.' } | Select-Object -First 1)
+}
+
+$form = New-Object System.Windows.Forms.Form
+$form.Text = 'Установка Gast Launcher'
+$form.ClientSize = New-Object System.Drawing.Size(540, 300)
+$form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
+$form.MaximizeBox = $false
+$form.MinimizeBox = $false
+$form.StartPosition = 'CenterScreen'
+$form.BackColor = [System.Drawing.Color]::FromArgb(16, 21, 27)
+$form.ForeColor = [System.Drawing.Color]::FromArgb(235, 240, 244)
+$form.Font = New-Object System.Drawing.Font('Segoe UI', 9)
+
+$title = New-Object System.Windows.Forms.Label
+$title.Text = 'Установить Gast Launcher'
+$title.Font = New-Object System.Drawing.Font('Segoe UI Semibold', 17)
+$title.Location = New-Object System.Drawing.Point(28, 22)
+$title.Size = New-Object System.Drawing.Size(470, 34)
+$form.Controls.Add($title)
+
+$subtitle = New-Object System.Windows.Forms.Label
+$subtitle.Text = 'Выбери папку установки и ярлыки. Лаунчер можно удалить через список приложений Windows.'
+$subtitle.Location = New-Object System.Drawing.Point(30, 67)
+$subtitle.Size = New-Object System.Drawing.Size(475, 42)
+$subtitle.ForeColor = [System.Drawing.Color]::FromArgb(164, 177, 188)
+$form.Controls.Add($subtitle)
+
+$pathLabel = New-Object System.Windows.Forms.Label
+$pathLabel.Text = 'Папка установки'
+$pathLabel.Location = New-Object System.Drawing.Point(30, 123)
+$pathLabel.Size = New-Object System.Drawing.Size(470, 20)
+$form.Controls.Add($pathLabel)
+
+$pathBox = New-Object System.Windows.Forms.TextBox
+$pathBox.Text = $defaultDir
+$pathBox.Location = New-Object System.Drawing.Point(30, 147)
+$pathBox.Size = New-Object System.Drawing.Size(475, 26)
+$pathBox.BackColor = [System.Drawing.Color]::FromArgb(28, 36, 44)
+$pathBox.ForeColor = [System.Drawing.Color]::White
+$pathBox.BorderStyle = 'FixedSingle'
+$form.Controls.Add($pathBox)
+
+$desktopBox = New-Object System.Windows.Forms.CheckBox
+$desktopBox.Text = 'Создать ярлык на рабочем столе'
+$desktopBox.Checked = $true
+$desktopBox.Location = New-Object System.Drawing.Point(30, 187)
+$desktopBox.Size = New-Object System.Drawing.Size(280, 24)
+$form.Controls.Add($desktopBox)
+
+$launchBox = New-Object System.Windows.Forms.CheckBox
+$launchBox.Text = 'Запустить Gast Launcher после установки'
+$launchBox.Checked = $true
+$launchBox.Location = New-Object System.Drawing.Point(30, 214)
+$launchBox.Size = New-Object System.Drawing.Size(330, 24)
+$form.Controls.Add($launchBox)
+
+$installButton = New-Object System.Windows.Forms.Button
+$installButton.Text = 'Установить'
+$installButton.Location = New-Object System.Drawing.Point(360, 250)
+$installButton.Size = New-Object System.Drawing.Size(145, 34)
+$installButton.FlatStyle = 'Flat'
+$installButton.BackColor = [System.Drawing.Color]::FromArgb(168, 240, 122)
+$installButton.ForeColor = [System.Drawing.Color]::FromArgb(20, 25, 16)
+$form.Controls.Add($installButton)
+
+$cancelButton = New-Object System.Windows.Forms.Button
+$cancelButton.Text = 'Отмена'
+$cancelButton.Location = New-Object System.Drawing.Point(260, 250)
+$cancelButton.Size = New-Object System.Drawing.Size(90, 34)
+$cancelButton.FlatStyle = 'Flat'
+$cancelButton.BackColor = [System.Drawing.Color]::FromArgb(35, 45, 55)
+$cancelButton.ForeColor = [System.Drawing.Color]::White
+$cancelButton.Add_Click({ $form.Close() })
+$form.Controls.Add($cancelButton)
+$form.AcceptButton = $installButton
+$form.CancelButton = $cancelButton
+
+$installButton.Add_Click({
+    if (-not (Test-Path $exeSource)) {
+        [System.Windows.Forms.MessageBox]::Show('Не найден файл GastLauncher.exe в установочном пакете.', 'Gast Launcher', 'OK', 'Error') | Out-Null
+        return
+    }
+    if (-not (Has-DotNetDesktop8)) {
+        $answer = [System.Windows.Forms.MessageBox]::Show('Для Gast Launcher нужен .NET 8 Desktop Runtime x64. Открыть страницу загрузки Microsoft?', 'Нужен .NET 8', 'YesNo', 'Information')
+        if ($answer -eq [System.Windows.Forms.DialogResult]::Yes) { Start-Process 'https://dotnet.microsoft.com/en-us/download/dotnet/8.0' }
+        return
+    }
+    $installPath = $pathBox.Text.Trim()
+    if ([string]::IsNullOrWhiteSpace($installPath)) {
+        [System.Windows.Forms.MessageBox]::Show('Укажи папку установки.', 'Gast Launcher', 'OK', 'Warning') | Out-Null
+        return
+    }
+    try {
+        $installButton.Enabled = $false
+        $installButton.Text = 'Устанавливаю…'
+        $form.Refresh()
+        New-Item -ItemType Directory -Force -Path $installPath | Out-Null
+        Copy-Item -LiteralPath $exeSource -Destination (Join-Path $installPath 'GastLauncher.exe') -Force
+        Copy-Item -LiteralPath $uninstallSource -Destination (Join-Path $installPath 'uninstall.ps1') -Force
+        New-Item -ItemType Directory -Force -Path $startMenuDir | Out-Null
+        $shell = New-Object -ComObject WScript.Shell
+        $shortcutPath = Join-Path $startMenuDir 'Gast Launcher.lnk'
+        $shortcut = $shell.CreateShortcut($shortcutPath)
+        $shortcut.TargetPath = Join-Path $installPath 'GastLauncher.exe'
+        $shortcut.WorkingDirectory = $installPath
+        $shortcut.Description = 'Запуск Gast Launcher'
+        $shortcut.Save()
+        if ($desktopBox.Checked) {
+            $desktop = $shell.CreateShortcut((Join-Path ([Environment]::GetFolderPath('Desktop')) 'Gast Launcher.lnk'))
+            $desktop.TargetPath = Join-Path $installPath 'GastLauncher.exe'
+            $desktop.WorkingDirectory = $installPath
+            $desktop.Description = 'Запуск Gast Launcher'
+            $desktop.Save()
+        }
+        $key = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey($registryPath)
+        $key.SetValue('DisplayName', 'Gast Launcher')
+        $key.SetValue('DisplayVersion', '1.0.0')
+        $key.SetValue('Publisher', 'Gast Launcher')
+        $key.SetValue('InstallLocation', $installPath)
+        $key.SetValue('UninstallString', ('powershell.exe -NoProfile -ExecutionPolicy Bypass -File "{0}"' -f (Join-Path $installPath 'uninstall.ps1')))
+        $key.SetValue('NoModify', 1, [Microsoft.Win32.RegistryValueKind]::DWord)
+        $key.SetValue('NoRepair', 1, [Microsoft.Win32.RegistryValueKind]::DWord)
+        $key.Close()
+        $form.Close()
+        if ($launchBox.Checked) { Start-Process (Join-Path $installPath 'GastLauncher.exe') }
+    }
+    catch {
+        $installButton.Enabled = $true
+        $installButton.Text = 'Установить'
+        [System.Windows.Forms.MessageBox]::Show(('Не удалось установить лаунчер: ' + $_.Exception.Message), 'Gast Launcher', 'OK', 'Error') | Out-Null
+    }
+})
+
+[void]$form.ShowDialog()
+
+
+======================== FILE: work\installer\uninstall.ps1 ========================
+Add-Type -AssemblyName System.Windows.Forms
+$answer = [System.Windows.Forms.MessageBox]::Show('Удалить Gast Launcher и его ярлыки? Миры и файлы в папке .minecraft останутся без изменений.', 'Удаление Gast Launcher', 'YesNo', 'Question')
+if ($answer -ne [System.Windows.Forms.DialogResult]::Yes) { exit }
+
+$installDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$startMenuDir = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Gast Launcher'
+$desktopShortcut = Join-Path ([Environment]::GetFolderPath('Desktop')) 'Gast Launcher.lnk'
+$registryPath = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\GastLauncher'
+Remove-Item -LiteralPath $startMenuDir -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath $desktopShortcut -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath ('HKCU:\' + $registryPath) -Recurse -Force -ErrorAction SilentlyContinue
+$escapedDir = $installDir.Replace('"', '""')
+$cmd = '/c ping 127.0.0.1 -n 3 > nul & rmdir /s /q "' + $escapedDir + '"'
+Start-Process -FilePath $env:ComSpec -ArgumentList $cmd -WindowStyle Hidden
+
+
